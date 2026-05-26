@@ -1,25 +1,35 @@
-# Définition de l'image de base depuis laquelle on créé notre image
-FROM node:24-alpine
-
-# Définition d'un espace de travail
+# ===== STAGE 1 : "builder" =====
+# Cette image va compiler, puis être JETÉE
+FROM node:24-alpine AS builder
+RUN apk add --no-cache openssl
+RUN corepack enable
 WORKDIR /app
 
-# Copie du package.json dans le futur conteneur
-COPY package.json ./
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile    # ← installe TOUT (dev + prod)
 
-# Copie du pnpm-lock.yaml dans le futur conteneur
-COPY pnpm-lock.yaml ./
+COPY . .
+RUN pnpm run db:generate              # ← génère le client Prisma
+RUN pnpm run build                    # ← compile TS → JS dans dist/
 
-# Intallation des dépendances de Node
-RUN pnpm install
+# À la fin de ce stage, on a : dist/, generated/, node_modules complet,
+# code source, types, etc. Cette image va exister temporairement.
 
-# Copie du reste du code dans le conteneur
-COPY ./ ./
+# ===== STAGE 2 : image finale =====
+# C'est CELLE-CI qui sera publiée et exécutée
+FROM node:24-alpine
+RUN apk add --no-cache openssl
+RUN corepack enable
+WORKDIR /app
 
-# Génération du client prisma capable de se connecter à la DB
-RUN pnpm run db:generate
+# Réinstallation, mais cette fois UNIQUEMENT les deps de prod
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --prod   # ← --prod = pas de devDeps
 
-# Création du dossier dist contenant le code JS compilé qui sera exécuté
-RUN pnpm run build
+# On récupère du builder UNIQUEMENT les artefacts compilés
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/generated ./generated
+COPY --from=builder /app/prisma ./prisma
 
+USER node
 CMD ["pnpm", "run", "docker:start"]

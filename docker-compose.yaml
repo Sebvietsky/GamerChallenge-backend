@@ -1,7 +1,7 @@
 services: # Liste des serveurs
   database: # Nom du service de la DB
     container_name: gamer_challenge_db
-    image: postgres:18-alpine # Image permettant de créer le conteneur
+    image: postgres:18 # Image permettant de créer le conteneur
     restart: unless-stopped # Redémarre automatiquement mon service en cas de crash (sauf s'il a été éteint manuellement)
     volumes:
       - gamer_challenge_volume:/var/lib/postgresql # On monte un volume pour la persistence de donnée
