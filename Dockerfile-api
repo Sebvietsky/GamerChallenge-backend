@@ -1,35 +1,27 @@
-# ===== STAGE 1 : "builder" =====
-# Cette image va compiler, puis être JETÉE
-FROM node:24-alpine AS builder
-RUN apk add --no-cache openssl
-RUN corepack enable
-WORKDIR /app
-
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile    # ← installe TOUT (dev + prod)
-
-COPY . .
-RUN pnpm run db:generate              # ← génère le client Prisma
-RUN pnpm run build                    # ← compile TS → JS dans dist/
-
-# À la fin de ce stage, on a : dist/, generated/, node_modules complet,
-# code source, types, etc. Cette image va exister temporairement.
-
-# ===== STAGE 2 : image finale =====
-# C'est CELLE-CI qui sera publiée et exécutée
 FROM node:24-alpine
+
+# OpenSSL requis par Prisma sur Alpine
 RUN apk add --no-cache openssl
+
+# Active pnpm via corepack
 RUN corepack enable
+
 WORKDIR /app
 
-# Réinstallation, mais cette fois UNIQUEMENT les deps de prod
+# Copie des manifestes en premier pour profiter du cache Docker
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --prod   # ← --prod = pas de devDeps
 
-# On récupère du builder UNIQUEMENT les artefacts compilés
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/generated ./generated
-COPY --from=builder /app/prisma ./prisma
+# Installe TOUTES les deps (dev incluses, pour avoir tsx en dev)
+RUN pnpm install --frozen-lockfile
 
-USER node
+# Copie du reste du code
+COPY . .
+
+# Génère le client Prisma
+RUN pnpm run db:generate
+
+# Compile TypeScript → JavaScript
+RUN pnpm run build
+
+# Lance en prod : migrate deploy + node dist/...
 CMD ["pnpm", "run", "docker:start"]
