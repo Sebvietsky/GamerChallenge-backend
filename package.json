@@ -16,7 +16,7 @@
     "db:studio": "prisma studio",
     "docker:start": "pnpm run db:migrate:deploy && pnpm run start",
     "docker:dev": "docker compose up --build",
-    "docker:prod": "docker compose -f docker-compose.yaml up",
+    "docker:prod": "docker compose -f docker-compose.yaml up -d --build",
     "docker:down": "docker compose down"
   },
   "keywords": [],
@@ -28,7 +28,6 @@
     "@types/express": "^5.0.6",
     "@types/node": "^25.9.1",
     "@types/pg": "^8.20.0",
-    "prisma": "^7.8.0",
     "tsx": "^4.22.3",
     "typescript": "^6.0.3"
   },
@@ -37,6 +36,7 @@
     "@prisma/client": "^7.8.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "pg": "^8.21.0"
+    "pg": "^8.21.0",
+    "prisma": "^7.8.0"
   }
 }
