@@ -1,20 +1,23 @@
 {
-  "name": "projet-cda-GamerChallenges-backend",
+  "name": "projet-cda-gamerchallenges-backend",
   "version": "1.0.0",
   "description": "",
   "main": "server.js",
   "scripts": {
     "start": "node dist/src/server.js",
     "build": "tsc",
-    "docker:start": "pnpm run db:migrate:deploy && npm run start",
-    "dev": "tsx --watch src/server.ts",
+    "dev": "tsx watch src/server.ts",
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:migrate:reset": "prisma migrate reset --force",
     "db:generate": "prisma generate",
     "db:seed": "tsx ./src/models/seeding.ts",
-    "db:reset": "npm run db:migrate:reset && npm run db:seed",
-    "db:studio": "prisma studio"
+    "db:reset": "pnpm run db:migrate:reset && pnpm run db:seed",
+    "db:studio": "prisma studio",
+    "docker:start": "pnpm run db:migrate:deploy && pnpm run start",
+    "docker:dev": "docker compose up --build",
+    "docker:prod": "docker compose -f docker-compose.yaml up",
+    "docker:down": "docker compose down"
   },
   "keywords": [],
   "author": "",
