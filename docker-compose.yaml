@@ -1,0 +1,31 @@
+services: # Liste des serveurs
+  database: # Nom du service de la DB
+    container_name: gamer_challenge_db
+    image: postgres:18-alpine # Image permettant de créer le conteneur
+    restart: unless-stopped # Redémarre automatiquement mon service en cas de crash (sauf s'il a été éteint manuellement)
+    volumes:
+      - gamer_challenge_volume:/var/lib/postgresql # On monte un volume pour la persistence de donnée
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile-api
+    restart: unless-stopped
+    environment:
+      PORT: ${PORT}
+      DATABASE_URL: ${DATABASE_URL}
+      CLIENT_URL: ${CLIENT_URL}
+    ports:
+      - ${API_LOCAL_PORT}:3000
+    depends_on:
+      - database
+    volumes:
+      - ./api:/app # Monte le code source local dans le conteneur (live reload)
+      - /app/node_modules # Volume anonyme : isole les node_modules du conteneur de ceux de l'hôte
+
+volumes: # Liste de nos volumes
+  gamer_challenge_volume: # Volume pour la persistance des données de la DB

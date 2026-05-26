@@ -1,5 +1,5 @@
 # Définition de l'image de base depuis laquelle on créé notre image
-FROM node:latest-alpine
+FROM node:24-alpine
 
 # Définition d'un espace de travail
 WORKDIR /app

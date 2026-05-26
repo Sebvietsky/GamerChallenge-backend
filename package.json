@@ -4,9 +4,17 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "node dist/server.js",
+    "start": "node dist/src/server.js",
     "build": "tsc",
-    "docker:start": "pnpm run db:migrate:deploy && npm run start"
+    "docker:start": "pnpm run db:migrate:deploy && npm run start",
+    "dev": "tsx --watch src/server.ts",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:migrate:reset": "prisma migrate reset --force",
+    "db:generate": "prisma generate",
+    "db:seed": "tsx ./src/models/seeding.ts",
+    "db:reset": "npm run db:migrate:reset && npm run db:seed",
+    "db:studio": "prisma studio"
   },
   "keywords": [],
   "author": "",
