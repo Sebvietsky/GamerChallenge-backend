@@ -11,3 +11,220 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// ===== ENUMS =====
+
+enum UserRole {
+  user
+  moderator
+  admin
+
+  @@map("user_role")
+}
+
+enum UserStatus {
+  active
+  banned
+  inactive
+
+  @@map("user_status")
+}
+
+enum ChallengeStatus {
+  draft
+  active
+  closed
+  rejected
+
+  @@map("challenge_status")
+}
+
+enum ParticipationStatus {
+  pending
+  approved
+  rejected
+
+  @@map("participation_status")
+}
+
+// ===== MODELS =====
+
+model User {
+  id             Int        @id @default(autoincrement())
+  username       String     @unique @db.VarChar(50)
+  email          String     @unique @db.VarChar(255)
+  password       String     @db.VarChar(255)
+  country        String?    @db.VarChar(50)
+  bio            String?    @db.Text
+  profilePicture String?    @map("profile_picture") @db.VarChar(255)
+  role           UserRole   @default(user)
+  visibility     Boolean    @default(true)
+  status         UserStatus @default(active)
+  createdAt      DateTime   @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt      DateTime   @updatedAt @map("updated_at") @db.Timestamptz()
+
+  // Relations
+  challenges         Challenge[]
+  participations     Participation[]
+  favoriteChallenges UserFavoriteChallenge[]
+  challengeVotes     ChallengeVote[]
+  participationVotes ParticipationVote[]
+
+  @@map("users")
+}
+
+model Game {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(200)
+  studio     String?  @db.VarChar(150)
+  platform   String?  @db.VarChar(100)
+  coverUrl   String?  @map("cover_url") @db.VarChar(255)
+  visibility Boolean  @default(true)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  // Relations
+  challenges Challenge[]
+  categories GameHasGameCategory[]
+
+  @@map("games")
+}
+
+model GameCategory {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  // Relations
+  games GameHasGameCategory[]
+
+  @@map("games_categories")
+}
+
+model GameHasGameCategory {
+  gameId         Int      @map("game_id")
+  gameCategoryId Int      @map("game_category_id")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  game     Game         @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  category GameCategory @relation(fields: [gameCategoryId], references: [id], onDelete: Cascade)
+
+  @@id([gameId, gameCategoryId])
+  @@map("games_has_games_categories")
+}
+
+model ChallengeCategory {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique @db.VarChar(100)
+  colorCode String?  @map("color_code") @db.VarChar(7)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  // Relations
+  challenges Challenge[]
+
+  @@map("challenges_categories")
+}
+
+model Difficulty {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique @db.VarChar(50)
+  colorCode String?  @map("color_code") @db.VarChar(7)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  // Relations
+  challenges Challenge[]
+
+  @@map("difficulty")
+}
+
+model Challenge {
+  id                  Int             @id @default(autoincrement())
+  title               String          @db.VarChar(200)
+  slug                String          @unique @db.VarChar(250)
+  description         String          @db.Text
+  hints               String?         @db.Text
+  demo                String?         @db.VarChar(255)
+  goals               String?         @db.Text
+  closesAt            DateTime?       @map("closes_at") @db.Timestamptz()
+  status              ChallengeStatus @default(active)
+  rejectedReason      String?         @map("rejected_reason") @db.Text
+  visibility          Boolean         @default(true)
+  gameId              Int             @map("game_id")
+  challengeCategoryId Int             @map("challenge_category_id")
+  difficultyId        Int             @map("difficulty_id")
+  userId              Int             @map("user_id")
+  createdAt           DateTime        @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt           DateTime        @updatedAt @map("updated_at") @db.Timestamptz()
+
+  // Relations
+  game              Game              @relation(fields: [gameId], references: [id], onDelete: Restrict)
+  challengeCategory ChallengeCategory @relation(fields: [challengeCategoryId], references: [id], onDelete: Restrict)
+  difficulty        Difficulty        @relation(fields: [difficultyId], references: [id], onDelete: Restrict)
+  user              User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  participations Participation[]
+  favoritedBy    UserFavoriteChallenge[]
+  votes          ChallengeVote[]
+
+  @@map("challenges")
+}
+
+model Participation {
+  id             Int                 @id @default(autoincrement())
+  video          String              @db.VarChar(255)
+  title          String              @db.VarChar(200)
+  slug           String?             @unique @db.VarChar(250)
+  description    String?             @db.Text
+  status         ParticipationStatus @default(pending)
+  rejectedReason String?             @map("rejected_reason") @db.Text
+  visibility     Boolean             @default(true)
+  challengeId    Int                 @map("challenge_id")
+  userId         Int                 @map("user_id")
+  createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt      DateTime            @updatedAt @map("updated_at") @db.Timestamptz()
+
+  // Relations
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  votes ParticipationVote[]
+
+  @@unique([challengeId, userId])
+  @@map("participations")
+}
+
+model UserFavoriteChallenge {
+  userId      Int      @map("user_id")
+  challengeId Int      @map("challenge_id")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, challengeId])
+  @@map("user_has_favorite_challenge")
+}
+
+model ChallengeVote {
+  userId      Int      @map("user_id")
+  challengeId Int      @map("challenge_id")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, challengeId])
+  @@map("challenge_has_vote")
+}
+
+model ParticipationVote {
+  userId          Int      @map("user_id")
+  participationId Int      @map("participation_id")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  participation Participation @relation(fields: [participationId], references: [id], onDelete: Cascade)
+
+  @@id([userId, participationId])
+  @@map("participation_has_vote")
+}
