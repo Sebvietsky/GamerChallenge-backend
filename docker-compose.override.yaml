@@ -1,6 +1,6 @@
 services:
   api:
-    command: pnpm run dev
+    command: sh -c "pnpm run db:migrate:deploy && pnpm run dev"
     volumes:
       - ./:/app # Monte le code source local dans le conteneur (live reload)
       - /app/node_modules # Volume anonyme : isole les node_modules du conteneur de ceux de l'hôte
