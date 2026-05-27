@@ -13,7 +13,7 @@
     "db:generate": "prisma generate",
     "db:seed": "tsx ./src/models/seeding.ts",
     "db:reset": "pnpm run db:migrate:reset && pnpm run db:seed",
-    "db:studio": "prisma studio",
+    "db:studio": "prisma studio --browser none",
     "docker:start": "pnpm run db:migrate:deploy && pnpm run start",
     "docker:dev": "docker compose up --build",
     "docker:prod": "docker compose -f docker-compose.yaml up -d --build",
