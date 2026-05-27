@@ -28,6 +28,7 @@ services: # Liste des serveurs
       DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}?schema=public"
     ports:
       - ${API_LOCAL_PORT}:3000
+      - 51212:51212
     depends_on:
       database:
         condition: service_healthy
