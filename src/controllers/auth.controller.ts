@@ -11,8 +11,6 @@ import {
   setAccessTokenCookie,
   setRefreshTokenCookie,
 } from "../lib/tokens";
-import type { User } from "../lib/prisma";
-import type { Token } from "../lib/interface";
 import { UnauthorizedError, ConflictError } from "../lib/errors";
 
 /**

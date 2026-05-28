@@ -4,6 +4,7 @@ import mainRouter from "./routes/index.routes";
 import { globalErrorHandler } from "./middlewares/globalErrorHandler";
 import cors from "cors";
 import env from "./config/env";
+import cookieParser from "cookie-parser";
 
 export const app: Express = express();
 
@@ -17,6 +18,8 @@ app.use(
     credentials: true,
   }),
 );
+
+app.use(cookieParser());
 
 app.use("/api", mainRouter);
 
