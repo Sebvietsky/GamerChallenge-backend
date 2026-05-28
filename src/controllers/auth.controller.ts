@@ -7,6 +7,7 @@ import {
 } from "../schemas/auth.schemas";
 import {
   generateTokens,
+  replaceRefreshTokenInDatabase,
   setAccessTokenCookie,
   setRefreshTokenCookie,
 } from "../lib/tokens";
@@ -77,26 +78,10 @@ const controller = {
     }
 
     const { accessToken, refreshToken } = generateTokens(user);
-    await this.replaceRefreshTokenInDatabase(refreshToken, user);
+    await replaceRefreshTokenInDatabase(refreshToken, user);
     setAccessTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
     res.json({ accessToken, refreshToken });
-  },
-
-  async replaceRefreshTokenInDatabase(
-    refreshToken: Token,
-    user: User,
-  ): Promise<void> {
-    await prisma.refreshToken.deleteMany({ where: { userId: user.id } });
-
-    await prisma.refreshToken.create({
-      data: {
-        token: refreshToken.token,
-        userId: user.id,
-        issuedAt: new Date(),
-        expiresAt: new Date(new Date().valueOf() + refreshToken.expiresInMS),
-      },
-    });
   },
 
   async refreshTokens(req: Request, res: Response): Promise<void> {
@@ -115,7 +100,7 @@ const controller = {
       throw new UnauthorizedError("Invalid Refresh token");
     }
     const { accessToken, refreshToken } = generateTokens(existingToken.user);
-    await this.replaceRefreshTokenInDatabase(refreshToken, existingToken.user);
+    await replaceRefreshTokenInDatabase(refreshToken, existingToken.user);
     setAccessTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
     res.json({ accessToken, refreshToken });

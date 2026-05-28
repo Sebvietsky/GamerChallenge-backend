@@ -1,5 +1,5 @@
 import type { Response } from "express";
-import type { User } from "../lib/prisma";
+import { prisma, type User } from "../lib/prisma";
 import jwt from "jsonwebtoken";
 import env from "../config/env";
 import { randomBytes } from "node:crypto";
@@ -49,5 +49,21 @@ export function setRefreshTokenCookie(res: Response, refreshToken: Token) {
     ...baseCookieOptions,
     maxAge: refreshToken.expiresInMS,
     path: "/api/auth/refresh",
+  });
+}
+
+export async function replaceRefreshTokenInDatabase(
+  refreshToken: Token,
+  user: User,
+): Promise<void> {
+  await prisma.refreshToken.deleteMany({ where: { userId: user.id } });
+
+  await prisma.refreshToken.create({
+    data: {
+      token: refreshToken.token,
+      userId: user.id,
+      issuedAt: new Date(),
+      expiresAt: new Date(new Date().valueOf() + refreshToken.expiresInMS),
+    },
   });
 }
