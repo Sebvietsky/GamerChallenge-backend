@@ -29,10 +29,12 @@ const controller = {
       await registerUserBodySchema.parseAsync(req.body);
 
     // Check if user already exists
-    const existingUser = await prisma.user.findFirst({ where: { email } });
+    const existingUser = await prisma.user.findFirst({
+      where: { OR: [{ email }, { username }] },
+    });
 
     if (existingUser) {
-      throw new ConflictError("Email already used");
+      throw new ConflictError("Username or email already used");
     }
 
     // Hash password before saving

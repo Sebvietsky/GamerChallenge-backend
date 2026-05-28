@@ -1,6 +1,7 @@
 import express from "express";
 import { type Express } from "express";
 import mainRouter from "./routes/index.routes";
+import { globalErrorHandler } from "./middlewares/globalErrorHandler";
 import cors from "cors";
 import env from "./config/env";
 import cookieParser from "cookie-parser";
@@ -21,3 +22,5 @@ app.use(
 app.use(cookieParser());
 
 app.use("/api", mainRouter);
+
+app.use(globalErrorHandler);
