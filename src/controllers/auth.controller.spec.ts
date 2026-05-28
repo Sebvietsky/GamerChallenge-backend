@@ -96,24 +96,20 @@ describe("[POST] /auth/register", () => {
     expect(response.status).toBe(409);
   });
 
-  test("should return the created user with the right properties", async () => {
+  test("should return 201 if optional properties are missing", async () => {
     // ARRANGE
-    await prisma.user.create({
-      data: {
-        username: USER.username,
-        email: USER.email,
-        password: "alreadyhashed",
-        bio: USER.bio,
-        country: USER.country,
-        profilePicture: USER.profilePicture,
-      },
-    });
+    const MINIMAL_USER: Partial<UserBody> = {
+      username: "princess_donut",
+      email: "princessdonut@dungeoncrawl.com",
+      password: "M0n l@qu@is s @ppelle C@rl",
+      confirm: "M0n l@qu@is s @ppelle C@rl",
+    };
 
     // ACT
     const response = await request(app).post("/api/auth/register").send(USER);
 
     // ASSERT
-    expect(response.status).toBe(409);
+    expect(response.status).toBe(201);
   });
 
   test("should return 400 if password is too short", async () => {
