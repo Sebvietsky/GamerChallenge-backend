@@ -9,6 +9,9 @@ function requireEnv(name: string): string {
 const env = {
   port: parseInt(process.env.PORT || "1234"),
   databaseUrl: requireEnv("DATABASE_URL"),
+  jwtSecret: requireEnv("JWT_SECRET"),
+  nodeEnv: requireEnv("NODE_ENV"),
+  allowedOrigins: requireEnv("ALLOWED_ORIGINS") || "*",
 };
 
 export default env;
