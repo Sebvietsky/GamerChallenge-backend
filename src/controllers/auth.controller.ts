@@ -11,8 +11,6 @@ import {
   setAccessTokenCookie,
   setRefreshTokenCookie,
 } from "../lib/tokens";
-import type { User } from "../lib/prisma";
-import type { Token } from "../lib/interface";
 import { UnauthorizedError, ConflictError } from "../lib/errors";
 
 /**
@@ -86,8 +84,7 @@ const controller = {
 
   async refreshTokens(req: Request, res: Response): Promise<void> {
     const token = req.cookies?.refreshToken;
-    console.log("Headers cookie brut :", req.headers.cookie);
-    console.log("req.cookies parsé   :", req.cookies);
+
     if (!token) throw new UnauthorizedError("Refresh token not provided");
     // au choix, on peut récupérer l'id du propriétaire du token dans le payload ou dans la db
     const existingToken = await prisma.refreshToken.findFirst({
