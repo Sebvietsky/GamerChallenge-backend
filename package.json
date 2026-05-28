@@ -6,7 +6,6 @@
   "scripts": {
     "start": "node dist/src/server.js",
     "build": "tsc",
-    "dev": "tsx watch src/server.ts",
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:migrate:reset": "prisma migrate reset --force",
@@ -14,10 +13,12 @@
     "db:seed": "tsx ./src/models/seeding.ts",
     "db:reset": "pnpm run db:migrate:reset && pnpm run db:seed",
     "db:studio": "prisma studio --browser none",
+    "dev": "tsx watch src/server.ts",
     "docker:start": "pnpm run db:migrate:deploy && pnpm run start",
     "docker:dev": "docker compose up --build",
     "docker:prod": "docker compose -f docker-compose.yaml up -d --build",
-    "docker:down": "docker compose down"
+    "docker:down": "docker compose down",
+    "test": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -30,8 +31,11 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.9.1",
     "@types/pg": "^8.20.0",
+    "@types/supertest": "^7.2.0",
+    "supertest": "^7.2.2",
     "tsx": "^4.22.3",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.7"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
