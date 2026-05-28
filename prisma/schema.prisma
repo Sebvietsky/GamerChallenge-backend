@@ -69,6 +69,7 @@ model User {
   favoriteChallenges UserFavoriteChallenge[]
   challengeVotes     ChallengeVote[]
   participationVotes ParticipationVote[]
+  refreshTokens RefreshToken[]
 
   @@map("users")
 }
@@ -227,4 +228,15 @@ model ParticipationVote {
 
   @@id([userId, participationId])
   @@map("participation_has_vote")
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int      @map("user_id")
+  issuedAt  DateTime @default(now()) @map("issued_at") @db.Timestamptz
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+
+  @@map("refresh_token")
 }
