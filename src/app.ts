@@ -13,8 +13,11 @@ app.use(express.json());
 app.use(
   cors({
     origin: env.allowedOrigins,
-    // => Autorise les cookies cross origin (back -> front car port différent)
-    // Import un header dans fetch => fetch(url, { credentials: 'include' });
+    // => Autorise les cookies cross origin (back -> front car origin différent)
+    // On a besoin d'ajouter credentials dans fetch => fetch(url, { credentials: 'include' });
+    // Ce qui permet d'envoyer les cookies d'autorisation au serveur
+    // Le back renvoie un header Access-Control-Allow-Credentials
+    // Ce qui autorise le front à exposer le JS
     credentials: true,
   }),
 );
