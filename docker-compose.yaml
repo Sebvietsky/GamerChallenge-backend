@@ -26,8 +26,11 @@ services: # Liste des serveurs
     environment:
       PORT: ${PORT}
       DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}?schema=public"
+      NODE_ENV: ${NODE_ENV}
+      JWT_SECRET: ${JWT_SECRET}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
     ports:
-      - ${API_LOCAL_PORT}:3000
+      - ${API_LOCAL_PORT}:${PORT}
       - 51212:51212
     depends_on:
       database:
