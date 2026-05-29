@@ -254,7 +254,11 @@ describe("[POST] /auth/login", () => {
       .send({ email: USER_EMAIL, password: VALID_PASSWORD });
 
     const rawCookies = response.headers["set-cookie"];
-    const cookies: string[] = Array.isArray(rawCookies) ? rawCookies : rawCookies ? [rawCookies] : [];
+    const cookies: string[] = Array.isArray(rawCookies)
+      ? rawCookies
+      : rawCookies
+        ? [rawCookies]
+        : [];
     const cookieNames = cookies.map((c: string) => c.split("=")[0]);
 
     expect(cookieNames).toContain("accessToken");
@@ -346,7 +350,11 @@ describe("[POST] /auth/refresh", () => {
       .send({ email: USER_EMAIL, password: VALID_PASSWORD });
 
     const rawCookies = loginRes.headers["set-cookie"];
-    const cookies: string[] = Array.isArray(rawCookies) ? rawCookies : rawCookies ? [rawCookies] : [];
+    const cookies: string[] = Array.isArray(rawCookies)
+      ? rawCookies
+      : rawCookies
+        ? [rawCookies]
+        : [];
     const refreshCookie = cookies.find((c: string) =>
       c.startsWith("refreshToken="),
     );
@@ -374,7 +382,11 @@ describe("[POST] /auth/refresh", () => {
       .set("Cookie", refreshCookie);
 
     const rawCookies = response.headers["set-cookie"];
-    const cookies: string[] = Array.isArray(rawCookies) ? rawCookies : rawCookies ? [rawCookies] : [];
+    const cookies: string[] = Array.isArray(rawCookies)
+      ? rawCookies
+      : rawCookies
+        ? [rawCookies]
+        : [];
     const cookieNames = cookies.map((c: string) => c.split("=")[0]);
 
     expect(cookieNames).toContain("accessToken");
@@ -391,9 +403,7 @@ describe("[POST] /auth/refresh", () => {
       where: { userId: user.id },
     });
 
-    await request(app)
-      .post("/api/auth/refresh")
-      .set("Cookie", refreshCookie);
+    await request(app).post("/api/auth/refresh").set("Cookie", refreshCookie);
 
     const tokenAfter = await prisma.refreshToken.findFirst({
       where: { userId: user.id },
@@ -442,5 +452,115 @@ describe("[POST] /auth/refresh", () => {
 
     expect(response.status).toBe(401);
     expect(deletedToken).toBeNull();
+  });
+});
+
+describe("[POST] /auth/logout", () => {
+  const USER_EMAIL = "carl@dungeoncrawl.com";
+
+  beforeEach(async () => {
+    await prisma.user.create({
+      data: {
+        username: "carl",
+        email: USER_EMAIL,
+        password: await argon2.hash(VALID_PASSWORD),
+      },
+    });
+  });
+
+  afterEach(async () => {
+    await prisma.user.deleteMany({ where: { email: USER_EMAIL } });
+  });
+
+  /** Helper: login and return the accessToken cookie string */
+  async function loginAndGetAccessCookie(): Promise<string> {
+    const loginRes = await request(app)
+      .post("/api/auth/login")
+      .send({ email: USER_EMAIL, password: VALID_PASSWORD });
+
+    const rawCookies = loginRes.headers["set-cookie"];
+    const cookies: string[] = Array.isArray(rawCookies)
+      ? rawCookies
+      : rawCookies
+        ? [rawCookies]
+        : [];
+    const accessCookie = cookies.find((c: string) =>
+      c.startsWith("accessToken="),
+    );
+    if (!accessCookie) throw new Error("accessToken cookie not found");
+    return accessCookie;
+  }
+
+  test("should return 204", async () => {
+    const accessCookie = await loginAndGetAccessCookie();
+
+    const response = await request(app)
+      .post("/api/auth/logout")
+      .set("Cookie", accessCookie);
+
+    expect(response.status).toBe(204);
+  });
+
+  test("should delete the refresh token from the database", async () => {
+    const user = await prisma.user.findFirstOrThrow({
+      where: { email: USER_EMAIL },
+    });
+    const accessCookie = await loginAndGetAccessCookie();
+
+    const tokenBefore = await prisma.refreshToken.findFirst({
+      where: { userId: user.id },
+    });
+
+    await request(app).post("/api/auth/logout").set("Cookie", accessCookie);
+
+    const tokenAfter = await prisma.refreshToken.findFirst({
+      where: { userId: user.id },
+    });
+
+    expect(tokenBefore).not.toBeNull();
+    expect(tokenAfter).toBeNull();
+  });
+
+  test("should clear the accessToken and refreshToken cookies", async () => {
+    const accessCookie = await loginAndGetAccessCookie();
+
+    const response = await request(app)
+      .post("/api/auth/logout")
+      .set("Cookie", accessCookie);
+
+    const rawCookies = response.headers["set-cookie"];
+    const cookies: string[] = Array.isArray(rawCookies)
+      ? rawCookies
+      : rawCookies
+        ? [rawCookies]
+        : [];
+
+    const accessCleared = cookies.some(
+      (c) =>
+        c.startsWith("accessToken=") &&
+        c.includes("Expires=Thu, 01 Jan 1970"),
+    );
+    const refreshCleared = cookies.some(
+      (c) =>
+        c.startsWith("refreshToken=") &&
+        c.includes("Expires=Thu, 01 Jan 1970"),
+    );
+
+    expect(accessCleared).toBe(true);
+    expect(refreshCleared).toBe(true);
+  });
+
+  test("should return 401 if no access token is provided", async () => {
+    const response = await request(app).post("/api/auth/logout");
+
+    expect(response.status).toBe(401);
+  });
+
+  test("should return 401 if access token is invalid", async () => {
+    const response = await request(app)
+      .post("/api/auth/logout")
+      .set("Cookie", "accessToken=invalidtoken000");
+
+    expect(response.status).toBe(401);
   });
 });
