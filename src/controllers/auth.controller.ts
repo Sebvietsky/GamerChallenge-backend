@@ -4,6 +4,7 @@ import { prisma } from "../lib/prisma";
 import {
   loginUserBodySchema,
   registerUserBodySchema,
+  resetPasswordBodySchema,
 } from "../schemas/auth.schemas";
 import {
   generateTokens,
@@ -107,7 +108,33 @@ const controller = {
     res.json({ accessToken, refreshToken });
   },
 
-  async resetPassword(req: Request, res: Response): Promise<void> {},
+  async resetPassword(req: Request, res: Response): Promise<void> {
+    const { currentPassword, newPassword } =
+      await resetPasswordBodySchema.parseAsync(req.body);
+
+    const connectedUser = await prisma.user.findFirstOrThrow({
+      where: {
+        id: req.user.id,
+      },
+    });
+
+    const isMatching = await argon2.verify(
+      connectedUser.password,
+      currentPassword,
+    );
+
+    if (!isMatching)
+      throw new UnauthorizedError("The current password is not matching.");
+
+    const newPasswordHashed = await argon2.hash(newPassword);
+
+    const updateUser = await prisma.user.update({
+      where: { id: connectedUser.id },
+      data: { password: newPasswordHashed },
+    });
+
+    res.status(200).send({ message: "Password successfully updated." });
+  },
 };
 
 export default controller;
