@@ -254,7 +254,11 @@ describe("[POST] /auth/login", () => {
       .send({ email: USER_EMAIL, password: VALID_PASSWORD });
 
     const rawCookies = response.headers["set-cookie"];
-    const cookies: string[] = Array.isArray(rawCookies) ? rawCookies : rawCookies ? [rawCookies] : [];
+    const cookies: string[] = Array.isArray(rawCookies)
+      ? rawCookies
+      : rawCookies
+        ? [rawCookies]
+        : [];
     const cookieNames = cookies.map((c: string) => c.split("=")[0]);
 
     expect(cookieNames).toContain("accessToken");
@@ -346,7 +350,11 @@ describe("[POST] /auth/refresh", () => {
       .send({ email: USER_EMAIL, password: VALID_PASSWORD });
 
     const rawCookies = loginRes.headers["set-cookie"];
-    const cookies: string[] = Array.isArray(rawCookies) ? rawCookies : rawCookies ? [rawCookies] : [];
+    const cookies: string[] = Array.isArray(rawCookies)
+      ? rawCookies
+      : rawCookies
+        ? [rawCookies]
+        : [];
     const refreshCookie = cookies.find((c: string) =>
       c.startsWith("refreshToken="),
     );
@@ -374,7 +382,11 @@ describe("[POST] /auth/refresh", () => {
       .set("Cookie", refreshCookie);
 
     const rawCookies = response.headers["set-cookie"];
-    const cookies: string[] = Array.isArray(rawCookies) ? rawCookies : rawCookies ? [rawCookies] : [];
+    const cookies: string[] = Array.isArray(rawCookies)
+      ? rawCookies
+      : rawCookies
+        ? [rawCookies]
+        : [];
     const cookieNames = cookies.map((c: string) => c.split("=")[0]);
 
     expect(cookieNames).toContain("accessToken");
@@ -391,9 +403,7 @@ describe("[POST] /auth/refresh", () => {
       where: { userId: user.id },
     });
 
-    await request(app)
-      .post("/api/auth/refresh")
-      .set("Cookie", refreshCookie);
+    await request(app).post("/api/auth/refresh").set("Cookie", refreshCookie);
 
     const tokenAfter = await prisma.refreshToken.findFirst({
       where: { userId: user.id },
@@ -442,5 +452,125 @@ describe("[POST] /auth/refresh", () => {
 
     expect(response.status).toBe(401);
     expect(deletedToken).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// [POST] /auth/resetPassword
+// ---------------------------------------------------------------------------
+
+describe("[POST] /auth/resetPassword", () => {
+  const USER_EMAIL = "reset@dungeoncrawl.com";
+  const NEW_PASSWORD = "NouveauM0tDeP@sse123!";
+
+  beforeEach(async () => {
+    await prisma.user.create({
+      data: {
+        username: "reset_user",
+        email: USER_EMAIL,
+        password: await argon2.hash(VALID_PASSWORD),
+      },
+    });
+  });
+
+  afterEach(async () => {
+    await prisma.user.deleteMany({ where: { email: USER_EMAIL } });
+  });
+
+  /** Helper: login and return the accessToken cookie string */
+  async function loginAndGetAccessCookie(): Promise<string> {
+    const loginRes = await request(app)
+      .post("/api/auth/login")
+      .send({ email: USER_EMAIL, password: VALID_PASSWORD });
+
+    const rawCookies = loginRes.headers["set-cookie"];
+    const cookies: string[] = Array.isArray(rawCookies)
+      ? rawCookies
+      : rawCookies
+        ? [rawCookies]
+        : [];
+    const accessCookie = cookies.find((c: string) =>
+      c.startsWith("accessToken="),
+    );
+    if (!accessCookie) throw new Error("accessToken cookie not found");
+    return accessCookie;
+  }
+
+  test("should return 200 and update password if current password is correct", async () => {
+    const accessCookie = await loginAndGetAccessCookie();
+
+    const response = await request(app)
+      .post("/api/auth/resetPassword")
+      .set("Cookie", accessCookie)
+      .send({
+        currentPassword: VALID_PASSWORD,
+        newPassword: NEW_PASSWORD,
+        confirm: NEW_PASSWORD,
+      });
+
+    const user = await prisma.user.findFirstOrThrow({
+      where: { email: USER_EMAIL },
+    });
+    const isMatching = await argon2.verify(user.password, NEW_PASSWORD);
+
+    expect(response.status).toBe(200);
+    expect(response.body.message).toBe("Password successfully updated.");
+    expect(isMatching).toBe(true);
+  });
+
+  test("should return 401 if current password is incorrect", async () => {
+    const accessCookie = await loginAndGetAccessCookie();
+
+    const response = await request(app)
+      .post("/api/auth/resetPassword")
+      .set("Cookie", accessCookie)
+      .send({
+        currentPassword: "WrongPassword123!",
+        newPassword: NEW_PASSWORD,
+        confirm: NEW_PASSWORD,
+      });
+
+    expect(response.status).toBe(401);
+    expect(response.body.error).toBe("The current password is not matching.");
+  });
+
+  test("should return 400 if new password does not meet complexity requirements", async () => {
+    const accessCookie = await loginAndGetAccessCookie();
+
+    const response = await request(app)
+      .post("/api/auth/resetPassword")
+      .set("Cookie", accessCookie)
+      .send({
+        currentPassword: VALID_PASSWORD,
+        newPassword: "short",
+        confirm: "short",
+      });
+
+    expect(response.status).toBe(400);
+  });
+
+  test("should return 400 if confirm does not match new password", async () => {
+    const accessCookie = await loginAndGetAccessCookie();
+
+    const response = await request(app)
+      .post("/api/auth/resetPassword")
+      .set("Cookie", accessCookie)
+      .send({
+        currentPassword: VALID_PASSWORD,
+        newPassword: NEW_PASSWORD,
+        confirm: "DifferentPassword123!",
+      });
+
+    expect(response.status).toBe(400);
+  });
+
+  test("should return 401 if not authenticated", async () => {
+    const response = await request(app).post("/api/auth/resetPassword").send({
+      currentPassword: VALID_PASSWORD,
+      newPassword: NEW_PASSWORD,
+      confirm: NEW_PASSWORD,
+    });
+
+    expect(response.status).toBe(401);
   });
 });

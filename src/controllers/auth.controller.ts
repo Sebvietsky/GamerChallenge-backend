@@ -12,7 +12,7 @@ import {
   setAccessTokenCookie,
   setRefreshTokenCookie,
 } from "../lib/tokens";
-import { UnauthorizedError, ConflictError } from "../lib/errors";
+import { UnauthorizedError, ConflictError, NotFoundError } from "../lib/errors";
 
 /**
  * Authentication controller handling user-related actions
@@ -112,11 +112,13 @@ const controller = {
     const { currentPassword, newPassword } =
       await resetPasswordBodySchema.parseAsync(req.body);
 
-    const connectedUser = await prisma.user.findFirstOrThrow({
+    const connectedUser = await prisma.user.findFirst({
       where: {
         id: req.user.id,
       },
     });
+
+    if (!connectedUser) throw new NotFoundError("User not found.");
 
     const isMatching = await argon2.verify(
       connectedUser.password,
@@ -128,7 +130,7 @@ const controller = {
 
     const newPasswordHashed = await argon2.hash(newPassword);
 
-    const updateUser = await prisma.user.update({
+    await prisma.user.update({
       where: { id: connectedUser.id },
       data: { password: newPasswordHashed },
     });
