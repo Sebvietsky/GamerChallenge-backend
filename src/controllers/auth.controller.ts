@@ -23,7 +23,7 @@ const controller = {
    * @param req - Express request object
    * @param res - Express response object
    */
-  async registerUser(req: Request, res: Response) {
+  async registerUser(req: Request, res: Response): Promise<void> {
     // Validate and parse request body
     const { username, email, password, country, bio, profilePicture } =
       await registerUserBodySchema.parseAsync(req.body);
@@ -62,6 +62,7 @@ const controller = {
       profilePicture: user.profilePicture,
     });
   },
+
   async loginUser(req: Request, res: Response): Promise<void> {
     const { email, password } = await loginUserBodySchema.parseAsync(req.body);
 
@@ -105,6 +106,8 @@ const controller = {
     setRefreshTokenCookie(res, refreshToken);
     res.json({ accessToken, refreshToken });
   },
+
+  async resetPassword(req: Request, res: Response): Promise<void> {},
 };
 
 export default controller;
