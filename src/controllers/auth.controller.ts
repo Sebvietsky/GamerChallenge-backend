@@ -105,6 +105,13 @@ const controller = {
     setRefreshTokenCookie(res, refreshToken);
     res.json({ accessToken, refreshToken });
   },
+
+  async logoutUser(req: Request, res: Response): Promise<void> {
+    await prisma.refreshToken.delete({ where: { userId: req.user.id } });
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken", { path: "/api/auth/refresh" });
+    res.status(204).end();
+  },
 };
 
 export default controller;

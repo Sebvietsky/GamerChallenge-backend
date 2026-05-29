@@ -234,7 +234,7 @@ model RefreshToken {
   id        Int      @id @default(autoincrement())
   token     String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    Int      @map("user_id")
+  userId    Int      @map("user_id") @unique
   issuedAt  DateTime @default(now()) @map("issued_at") @db.Timestamptz
   expiresAt DateTime @map("expires_at") @db.Timestamptz
 
