@@ -68,9 +68,9 @@ const controller = {
       total,
     });
   },
-  // GET /challenges/:id
+  // GET /challenges/:slug
   async findOne(req: Request, res: Response) {
-    const id = await parseIdFromParams(req.id);
+    const id = await parseIdFromParams(req.slug);
 
     const challenge = await prisma.challenge.findFirst({
       where: {
