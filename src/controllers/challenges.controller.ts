@@ -178,6 +178,17 @@ const controller = {
   },
 
   // DELETE /challenges/:slug
+  async deleteOne(req: Request, res: Response) {
+    const slug = await parseSlugFromParams(req.params.slug);
+
+    await prisma.challenge.delete({
+      where: {
+        slug,
+      },
+    });
+
+    res.send(204).end();
+  },
 };
 
 export default controller;
