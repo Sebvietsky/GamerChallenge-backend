@@ -76,19 +76,11 @@ describe("[POST] /auth/register", () => {
     assert.match(dbUser.password, /\$argon2id/);
   });
 
-  test("should return the created user with the right properties", async () => {
+  test("should return a success message on register", async () => {
     const response = await request(app).post("/api/auth/register").send(USER);
 
-    const retrievedUser: UserResponse = response.body;
-
     expect(response.status).toBe(201);
-    expect(retrievedUser).toHaveProperty("id");
-    expect(retrievedUser.username).toBe(USER.username);
-    expect(retrievedUser.email).toBe(USER.email);
-    expect(retrievedUser.country).toBe(USER.country);
-    expect(retrievedUser.profilePicture).toBe(USER.profilePicture);
-    expect(retrievedUser.bio).toBe(USER.bio);
-    expect(retrievedUser.password).toBeUndefined();
+    expect(response.body).toHaveProperty("message");
   });
 
   test("should return 409 if email is already used", async () => {
