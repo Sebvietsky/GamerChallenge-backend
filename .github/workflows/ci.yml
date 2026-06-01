@@ -58,7 +58,7 @@ jobs:
         run: pnpm run lint
 
       - name: Format check
-        run: pnpm run format:check
+        run: pnpm run format:check --write
 
       - name: Security audit
         run: pnpm audit --audit-level=high
