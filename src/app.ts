@@ -5,6 +5,7 @@ import { globalErrorHandler } from "./middlewares/globalErrorHandler";
 import cors from "cors";
 import env from "./config/env";
 import cookieParser from "cookie-parser";
+import { notFoundMiddleware } from "./middlewares/not-found.middleware";
 
 export const app: Express = express();
 
@@ -26,4 +27,5 @@ app.use(cookieParser());
 
 app.use("/api", mainRouter);
 
+app.use(notFoundMiddleware);
 app.use(globalErrorHandler);
