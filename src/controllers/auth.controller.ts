@@ -4,6 +4,7 @@ import { prisma } from "../lib/prisma";
 import {
   loginUserBodySchema,
   registerUserBodySchema,
+  resetPasswordBodySchema,
 } from "../schemas/auth.schemas";
 import {
   generateTokens,
@@ -11,7 +12,7 @@ import {
   setAccessTokenCookie,
   setRefreshTokenCookie,
 } from "../lib/tokens";
-import { UnauthorizedError, ConflictError } from "../lib/errors";
+import { UnauthorizedError, ConflictError, NotFoundError } from "../lib/errors";
 
 /**
  * Authentication controller handling user-related actions
@@ -23,7 +24,7 @@ const controller = {
    * @param req - Express request object
    * @param res - Express response object
    */
-  async registerUser(req: Request, res: Response) {
+  async registerUser(req: Request, res: Response): Promise<void> {
     // Validate and parse request body
     const { username, email, password, country, bio, profilePicture } =
       await registerUserBodySchema.parseAsync(req.body);
@@ -57,6 +58,7 @@ const controller = {
     // Return created user (excluding password)
     res.status(201).json(userWithoutPassword);
   },
+
   async loginUser(req: Request, res: Response): Promise<void> {
     const { email, password } = await loginUserBodySchema.parseAsync(req.body);
 
@@ -104,6 +106,36 @@ const controller = {
     setAccessTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
     res.json({ accessToken, refreshToken });
+  },
+
+  async resetPassword(req: Request, res: Response): Promise<void> {
+    const { currentPassword, newPassword } =
+      await resetPasswordBodySchema.parseAsync(req.body);
+
+    const connectedUser = await prisma.user.findFirst({
+      where: {
+        id: req.user.id,
+      },
+    });
+
+    if (!connectedUser) throw new NotFoundError("User not found.");
+
+    const isMatching = await argon2.verify(
+      connectedUser.password,
+      currentPassword,
+    );
+
+    if (!isMatching)
+      throw new UnauthorizedError("The current password is not matching.");
+
+    const newPasswordHashed = await argon2.hash(newPassword);
+
+    await prisma.user.update({
+      where: { id: connectedUser.id },
+      data: { password: newPasswordHashed },
+    });
+
+    res.status(200).send({ message: "Password successfully updated." });
   },
 
   async logoutUser(req: Request, res: Response): Promise<void> {
