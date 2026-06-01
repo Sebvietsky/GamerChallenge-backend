@@ -109,7 +109,7 @@ const controller = {
   },
 
   async resetPassword(req: Request, res: Response): Promise<void> {
-    const { currentPassword, newPassword, confirm } =
+    const { currentPassword, newPassword } =
       await resetPasswordBodySchema.parseAsync(req.body);
 
     const connectedUser = await prisma.user.findFirst({
