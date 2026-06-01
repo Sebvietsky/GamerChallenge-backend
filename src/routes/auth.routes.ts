@@ -11,12 +11,17 @@ router.post("/register", controller.registerUser);
 router.post(
   "/resetPassword",
   checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
-  controller.resetPassword,
+  controller.resetPassword
 );
 router.post(
   "/logout",
   checkRoles([UserRole.user, UserRole.moderator, UserRole.admin]),
   controller.logoutUser
+);
+router.get(
+  "/me",
+  checkRoles([UserRole.user, UserRole.moderator, UserRole.admin]),
+  controller.getConnectedUser
 );
 
 export default router;
