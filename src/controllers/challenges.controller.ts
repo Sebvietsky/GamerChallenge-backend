@@ -5,7 +5,7 @@ import {
   PaginationOutputSchema,
   type PaginationParams,
 } from "../schemas/query.schemas";
-import { parseIdFromParams } from "./utils";
+import { generateSlug, parseIdFromParams } from "./utils";
 import { NotFoundError } from "../lib/errors";
 import { createOneChallengeBodySchema } from "../schemas/controller.schemas";
 
@@ -99,9 +99,39 @@ const controller = {
   */
 
   async createOne(req: Request, res: Response) {
-    const challengeBody = await createOneChallengeBodySchema.parseAsync(
-      req.body,
-    );
+    const {
+      title,
+      description,
+      hints,
+      demo,
+      goals,
+      closesAt,
+      gameId,
+      challengeCategoryId,
+      difficultyId,
+    } = await createOneChallengeBodySchema.parseAsync(req.body);
+
+    const { username } = await prisma.user.findUniqueOrThrow({
+      where: {
+        id: req.user.id,
+      },
+    });
+
+    await prisma.challenge.create({
+      data: {
+        userId: req.user.id,
+        title,
+        slug: generateSlug(title, username),
+        description,
+        hints: hints ?? null,
+        demo: demo ?? null,
+        goals: goals ?? null,
+        closesAt: closesAt ?? null,
+        gameId,
+        challengeCategoryId,
+        difficultyId,
+      },
+    });
 
     res.status(201).send({
       message: "Challenge successfully created.",
