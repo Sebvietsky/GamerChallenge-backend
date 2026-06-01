@@ -99,17 +99,9 @@ const controller = {
   */
 
   async createOne(req: Request, res: Response) {
-    const {
-      title,
-      description,
-      hints,
-      demo,
-      goals,
-      closesAt,
-      gameId,
-      challengeCategoryId,
-      difficultyId,
-    } = await createOneChallengeBodySchema.parseAsync(req.body);
+    const challengeBody = await createOneChallengeBodySchema.parseAsync(
+      req.body,
+    );
 
     res.status(201).send({
       message: "Challenge successfully created.",
