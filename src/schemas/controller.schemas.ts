@@ -16,9 +16,9 @@ import z from "zod";
 export const createOneChallengeBodySchema = z.object({
   title: z.string().min(2),
   description: z.string().min(2),
-  hints: z.array(z.string().min(2)).optional(),
+  hints: z.string().min(2).optional(),
   demo: z.string().min(2).optional(),
-  goals: z.array(z.string().min(2)).optional(),
+  goals: z.string().min(2).optional(),
   closesAt: z.date().optional(),
   gameId: z.coerce.number().int().min(1),
   challengeCategoryId: z.coerce.number().int().min(1),
