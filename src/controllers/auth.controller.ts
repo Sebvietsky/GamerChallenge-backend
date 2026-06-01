@@ -12,7 +12,7 @@ import {
   setAccessTokenCookie,
   setRefreshTokenCookie,
 } from "../lib/tokens";
-import { UnauthorizedError, ConflictError, NotFoundError } from "../lib/errors";
+import { UnauthorizedError } from "../lib/errors";
 
 /**
  * Authentication controller handling user-related actions
@@ -29,19 +29,12 @@ const controller = {
     const { username, email, password, country, bio, profilePicture } =
       await registerUserBodySchema.parseAsync(req.body);
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findFirst({
-      where: { OR: [{ email }, { username }] },
-    });
-
-    if (existingUser) {
-      throw new ConflictError("Username or email already used");
-    }
-
     // Hash password before saving
     const passwordHash = await argon2.hash(password);
 
     // Create the new user in the database
+    // Error managed by globalErrorHandler
+    // If user already exists prisma.error P2002 = unique constaint violated
     await prisma.user.create({
       data: {
         username,
@@ -61,9 +54,7 @@ const controller = {
 
     const user = await prisma.user.findFirst({ where: { email } });
 
-    if (!user) {
-      throw new UnauthorizedError("Email and password do not match");
-    }
+    if (!user) throw new UnauthorizedError("Email and password do not match");
 
     const isMatching = await argon2.verify(user.password, password);
 
@@ -75,7 +66,7 @@ const controller = {
     await replaceRefreshTokenInDatabase(refreshToken, user);
     setAccessTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
-    res.status(200).json({ accessToken, refreshToken });
+    res.status(204).end();
   },
 
   async refreshTokens(req: Request, res: Response): Promise<void> {
@@ -101,24 +92,17 @@ const controller = {
   },
 
   async resetPassword(req: Request, res: Response): Promise<void> {
-    const { currentPassword, newPassword } =
-      await resetPasswordBodySchema.parseAsync(req.body);
+    const { currentPassword, newPassword } = await resetPasswordBodySchema.parseAsync(req.body);
 
-    const connectedUser = await prisma.user.findFirst({
+    const connectedUser = await prisma.user.findUniqueOrThrow({
       where: {
         id: req.user.id,
       },
     });
 
-    if (!connectedUser) throw new NotFoundError("User not found.");
+    const isMatching = await argon2.verify(connectedUser.password, currentPassword);
 
-    const isMatching = await argon2.verify(
-      connectedUser.password,
-      currentPassword,
-    );
-
-    if (!isMatching)
-      throw new UnauthorizedError("The current password is not matching.");
+    if (!isMatching) throw new UnauthorizedError("The current password is not matching.");
 
     const newPasswordHashed = await argon2.hash(newPassword);
 
@@ -135,6 +119,14 @@ const controller = {
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken", { path: "/api/auth/refresh" });
     res.status(204).end();
+  },
+
+  async getConnectedUser(req: Request, res: Response): Promise<void> {
+    const user = await prisma.user.findUniqueOrThrow({ where: { id: req.user.id } });
+
+    const { password: _password, ...userWithoutPassword } = user;
+
+    res.status(200).json(userWithoutPassword);
   },
 };
 

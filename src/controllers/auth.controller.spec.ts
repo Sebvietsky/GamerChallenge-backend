@@ -214,14 +214,12 @@ describe("[POST] /auth/login", () => {
     await prisma.user.deleteMany({ where: { email: USER_EMAIL } });
   });
 
-  test("should return 200 with accessToken and refreshToken in body", async () => {
+  test("should return 204 with a success message on login", async () => {
     const response = await request(app)
       .post("/api/auth/login")
       .send({ email: USER_EMAIL, password: VALID_PASSWORD });
 
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty("accessToken");
-    expect(response.body).toHaveProperty("refreshToken");
+    expect(response.status).toBe(204);
   });
 
   test("should set accessToken and refreshToken cookies", async () => {
@@ -455,9 +453,7 @@ describe("[POST] /auth/resetPassword", () => {
       : rawCookies
         ? [rawCookies]
         : [];
-    const accessCookie = cookies.find((c: string) =>
-      c.startsWith("accessToken="),
-    );
+    const accessCookie = cookies.find((c: string) => c.startsWith("accessToken="));
     if (!accessCookie) throw new Error("accessToken cookie not found");
     return accessCookie;
   }
@@ -620,12 +616,10 @@ describe("[POST] /auth/logout", () => {
         : [];
 
     const accessCleared = cookies.some(
-      (c) =>
-        c.startsWith("accessToken=") && c.includes("Expires=Thu, 01 Jan 1970"),
+      (c) => c.startsWith("accessToken=") && c.includes("Expires=Thu, 01 Jan 1970")
     );
     const refreshCleared = cookies.some(
-      (c) =>
-        c.startsWith("refreshToken=") && c.includes("Expires=Thu, 01 Jan 1970"),
+      (c) => c.startsWith("refreshToken=") && c.includes("Expires=Thu, 01 Jan 1970")
     );
 
     expect(accessCleared).toBe(true);
@@ -641,6 +635,81 @@ describe("[POST] /auth/logout", () => {
   test("should return 401 if access token is invalid", async () => {
     const response = await request(app)
       .post("/api/auth/logout")
+      .set("Cookie", "accessToken=invalidtoken000");
+
+    expect(response.status).toBe(401);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// [GET] /auth/me
+// ---------------------------------------------------------------------------
+
+describe("[GET] /auth/me", () => {
+  const USER_EMAIL = "carl@dungeoncrawl.com";
+
+  beforeEach(async () => {
+    await prisma.user.create({
+      data: {
+        username: "carl",
+        email: USER_EMAIL,
+        password: await argon2.hash(VALID_PASSWORD),
+        country: "USA",
+        bio: "Un aventurier.",
+      },
+    });
+  });
+
+  afterEach(async () => {
+    await prisma.user.deleteMany({ where: { email: USER_EMAIL } });
+  });
+
+  async function loginAndGetAccessCookie(): Promise<string> {
+    const loginRes = await request(app)
+      .post("/api/auth/login")
+      .send({ email: USER_EMAIL, password: VALID_PASSWORD });
+
+    const rawCookies = loginRes.headers["set-cookie"];
+    const cookies: string[] = Array.isArray(rawCookies)
+      ? rawCookies
+      : rawCookies
+        ? [rawCookies]
+        : [];
+    const accessCookie = cookies.find((c: string) => c.startsWith("accessToken="));
+    if (!accessCookie) throw new Error("accessToken cookie not found");
+    return accessCookie;
+  }
+
+  test("should return 200 with the connected user's data", async () => {
+    const accessCookie = await loginAndGetAccessCookie();
+
+    const response = await request(app).get("/api/auth/me").set("Cookie", accessCookie);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty("id");
+    expect(response.body.username).toBe("carl");
+    expect(response.body.email).toBe(USER_EMAIL);
+    expect(response.body.country).toBe("USA");
+    expect(response.body.bio).toBe("Un aventurier.");
+  });
+
+  test("should not expose the password", async () => {
+    const accessCookie = await loginAndGetAccessCookie();
+
+    const response = await request(app).get("/api/auth/me").set("Cookie", accessCookie);
+
+    expect(response.body.password).toBeUndefined();
+  });
+
+  test("should return 401 if not authenticated", async () => {
+    const response = await request(app).get("/api/auth/me");
+
+    expect(response.status).toBe(401);
+  });
+
+  test("should return 401 if access token is invalid", async () => {
+    const response = await request(app)
+      .get("/api/auth/me")
       .set("Cookie", "accessToken=invalidtoken000");
 
     expect(response.status).toBe(401);
