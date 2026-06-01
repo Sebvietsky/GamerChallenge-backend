@@ -52,15 +52,10 @@ const controller = {
       },
     });
 
+    const { password: _password, ...userWithoutPassword } = user;
+
     // Return created user (excluding password)
-    res.status(201).json({
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      country: user.country,
-      bio: user.bio,
-      profilePicture: user.profilePicture,
-    });
+    res.status(201).json(userWithoutPassword);
   },
   async loginUser(req: Request, res: Response): Promise<void> {
     const { email, password } = await loginUserBodySchema.parseAsync(req.body);
@@ -81,7 +76,12 @@ const controller = {
     await replaceRefreshTokenInDatabase(refreshToken, user);
     setAccessTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
-    res.json({ accessToken, refreshToken });
+    const { password: _password, ...userWithoutPassword } = user;
+
+    // Good pratice send user login + register ?
+    res.status(200).json({
+      user: userWithoutPassword,
+    });
   },
 
   async refreshTokens(req: Request, res: Response): Promise<void> {

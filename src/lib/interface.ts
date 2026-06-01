@@ -14,3 +14,10 @@ export interface ReqUser {
   id: number;
   role: UserRole;
 }
+
+export interface PaginationOutput {
+  skip: number;
+  take: number;
+  page: number;
+  limit: number;
+}
