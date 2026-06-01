@@ -4,9 +4,9 @@ import z from "zod";
 
 export function globalErrorHandler(
   error: Error,
-  req: Request,
+  _req: Request,
   res: Response,
-  next: NextFunction,
+  _next: NextFunction,
 ) {
   if (error instanceof z.ZodError) {
     console.info("ZodError", error);
