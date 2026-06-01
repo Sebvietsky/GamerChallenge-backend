@@ -54,7 +54,7 @@ export function setRefreshTokenCookie(res: Response, refreshToken: Token) {
 
 export async function replaceRefreshTokenInDatabase(
   refreshToken: Token,
-  user: User,
+  user: User
 ): Promise<void> {
   await prisma.refreshToken.deleteMany({ where: { userId: user.id } });
 

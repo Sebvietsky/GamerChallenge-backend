@@ -16,7 +16,7 @@ router.post(
 router.post(
   "/logout",
   checkRoles([UserRole.user, UserRole.moderator, UserRole.admin]),
-  controller.logoutUser,
+  controller.logoutUser
 );
 
 export default router;

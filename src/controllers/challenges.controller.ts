@@ -1,15 +1,11 @@
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { getPaginationParams } from "../utils/pagination.utils";
-import {
-  PaginationOutputSchema,
-  type PaginationParams,
-} from "../schemas/query.schemas";
+import { PaginationOutputSchema, type PaginationParams } from "../schemas/query.schemas";
 
 const controller = {
   async findAll(req: Request, res: Response) {
-    const { page, limit }: PaginationParams =
-      await PaginationOutputSchema.parseAsync(req.query);
+    const { page, limit }: PaginationParams = await PaginationOutputSchema.parseAsync(req.query);
 
     const { skip, take } = getPaginationParams(page, limit);
 

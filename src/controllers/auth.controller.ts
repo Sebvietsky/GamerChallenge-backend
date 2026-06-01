@@ -53,7 +53,6 @@ const controller = {
       },
     });
 
-    // Return created user (excluding password)
     res.status(201).json({ message: "Compte créé avec succès" });
   },
 
@@ -76,12 +75,7 @@ const controller = {
     await replaceRefreshTokenInDatabase(refreshToken, user);
     setAccessTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
-    const { password: _password, ...userWithoutPassword } = user;
-
-    // Good pratice send user login + register ?
-    res.status(200).json({
-      user: userWithoutPassword,
-    });
+    res.status(200).json({ accessToken, refreshToken });
   },
 
   async refreshTokens(req: Request, res: Response): Promise<void> {
