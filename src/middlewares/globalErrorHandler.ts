@@ -6,7 +6,7 @@ export function globalErrorHandler(
   error: Error,
   _req: Request,
   res: Response,
-  _next: NextFunction,
+  _next: NextFunction
 ) {
   if (error instanceof z.ZodError) {
     console.info("ZodError", error);

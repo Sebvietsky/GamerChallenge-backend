@@ -20,16 +20,6 @@ interface UserBody {
   profilePicture: string;
 }
 
-interface UserResponse {
-  id: number;
-  username: string;
-  email: string;
-  password?: string;
-  bio: string;
-  country: string;
-  profilePicture: string;
-}
-
 // ---------------------------------------------------------------------------
 // [POST] /auth/register
 // ---------------------------------------------------------------------------
@@ -49,11 +39,7 @@ describe("[POST] /auth/register", () => {
     await prisma.user.deleteMany({
       where: {
         email: {
-          in: [
-            "carl@dungeoncrawl.com",
-            "princessdonut@dungeoncrawl.com",
-            "other@dungeoncrawl.com",
-          ],
+          in: ["carl@dungeoncrawl.com", "princessdonut@dungeoncrawl.com", "other@dungeoncrawl.com"],
         },
       },
     });
@@ -119,9 +105,7 @@ describe("[POST] /auth/register", () => {
       confirm: "M0n l@qu@is s @ppelle C@rl",
     };
 
-    const response = await request(app)
-      .post("/api/auth/register")
-      .send(MINIMAL_USER);
+    const response = await request(app).post("/api/auth/register").send(MINIMAL_USER);
 
     expect(response.status).toBe(201);
   });
@@ -290,17 +274,13 @@ describe("[POST] /auth/login", () => {
   });
 
   test("should return 400 if email is missing", async () => {
-    const response = await request(app)
-      .post("/api/auth/login")
-      .send({ password: VALID_PASSWORD });
+    const response = await request(app).post("/api/auth/login").send({ password: VALID_PASSWORD });
 
     expect(response.status).toBe(400);
   });
 
   test("should return 400 if password is missing", async () => {
-    const response = await request(app)
-      .post("/api/auth/login")
-      .send({ email: USER_EMAIL });
+    const response = await request(app).post("/api/auth/login").send({ email: USER_EMAIL });
 
     expect(response.status).toBe(400);
   });
@@ -347,9 +327,7 @@ describe("[POST] /auth/refresh", () => {
       : rawCookies
         ? [rawCookies]
         : [];
-    const refreshCookie = cookies.find((c: string) =>
-      c.startsWith("refreshToken="),
-    );
+    const refreshCookie = cookies.find((c: string) => c.startsWith("refreshToken="));
     if (!refreshCookie) throw new Error("refreshToken cookie not found");
     return refreshCookie;
   }
@@ -357,9 +335,7 @@ describe("[POST] /auth/refresh", () => {
   test("should return 200 with new accessToken and refreshToken in body", async () => {
     const refreshCookie = await loginAndGetRefreshCookie();
 
-    const response = await request(app)
-      .post("/api/auth/refresh")
-      .set("Cookie", refreshCookie);
+    const response = await request(app).post("/api/auth/refresh").set("Cookie", refreshCookie);
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty("accessToken");
@@ -369,9 +345,7 @@ describe("[POST] /auth/refresh", () => {
   test("should set new accessToken and refreshToken cookies", async () => {
     const refreshCookie = await loginAndGetRefreshCookie();
 
-    const response = await request(app)
-      .post("/api/auth/refresh")
-      .set("Cookie", refreshCookie);
+    const response = await request(app).post("/api/auth/refresh").set("Cookie", refreshCookie);
 
     const rawCookies = response.headers["set-cookie"];
     const cookies: string[] = Array.isArray(rawCookies)
@@ -476,9 +450,7 @@ describe("[POST] /auth/logout", () => {
       : rawCookies
         ? [rawCookies]
         : [];
-    const accessCookie = cookies.find((c: string) =>
-      c.startsWith("accessToken="),
-    );
+    const accessCookie = cookies.find((c: string) => c.startsWith("accessToken="));
     if (!accessCookie) throw new Error("accessToken cookie not found");
     return accessCookie;
   }
@@ -486,9 +458,7 @@ describe("[POST] /auth/logout", () => {
   test("should return 204", async () => {
     const accessCookie = await loginAndGetAccessCookie();
 
-    const response = await request(app)
-      .post("/api/auth/logout")
-      .set("Cookie", accessCookie);
+    const response = await request(app).post("/api/auth/logout").set("Cookie", accessCookie);
 
     expect(response.status).toBe(204);
   });
@@ -516,9 +486,7 @@ describe("[POST] /auth/logout", () => {
   test("should clear the accessToken and refreshToken cookies", async () => {
     const accessCookie = await loginAndGetAccessCookie();
 
-    const response = await request(app)
-      .post("/api/auth/logout")
-      .set("Cookie", accessCookie);
+    const response = await request(app).post("/api/auth/logout").set("Cookie", accessCookie);
 
     const rawCookies = response.headers["set-cookie"];
     const cookies: string[] = Array.isArray(rawCookies)
@@ -528,14 +496,10 @@ describe("[POST] /auth/logout", () => {
         : [];
 
     const accessCleared = cookies.some(
-      (c) =>
-        c.startsWith("accessToken=") &&
-        c.includes("Expires=Thu, 01 Jan 1970"),
+      (c) => c.startsWith("accessToken=") && c.includes("Expires=Thu, 01 Jan 1970")
     );
     const refreshCleared = cookies.some(
-      (c) =>
-        c.startsWith("refreshToken=") &&
-        c.includes("Expires=Thu, 01 Jan 1970"),
+      (c) => c.startsWith("refreshToken=") && c.includes("Expires=Thu, 01 Jan 1970")
     );
 
     expect(accessCleared).toBe(true);

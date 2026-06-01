@@ -1,10 +1,7 @@
 import type { Request, Response } from "express";
 import argon2 from "argon2";
 import { prisma } from "../lib/prisma";
-import {
-  loginUserBodySchema,
-  registerUserBodySchema,
-} from "../schemas/auth.schemas";
+import { loginUserBodySchema, registerUserBodySchema } from "../schemas/auth.schemas";
 import {
   generateTokens,
   replaceRefreshTokenInDatabase,
@@ -57,6 +54,7 @@ const controller = {
     // Return created user (excluding password)
     res.status(201).json(userWithoutPassword);
   },
+
   async loginUser(req: Request, res: Response): Promise<void> {
     const { email, password } = await loginUserBodySchema.parseAsync(req.body);
 
@@ -78,7 +76,6 @@ const controller = {
     setRefreshTokenCookie(res, refreshToken);
     const { password: _password, ...userWithoutPassword } = user;
 
-    // Good pratice send user login + register ?
     res.status(200).json({
       user: userWithoutPassword,
     });
