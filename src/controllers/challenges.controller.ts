@@ -5,9 +5,12 @@ import {
   PaginationOutputSchema,
   type PaginationParams,
 } from "../schemas/query.schemas";
-import { generateSlug, parseIdFromParams } from "./utils";
-import { NotFoundError } from "../lib/errors";
-import { createOneChallengeBodySchema } from "../schemas/controller.schemas";
+import { generateSlug, parseSlugFromParams } from "./utils";
+import { BadRequestError, NotFoundError } from "../lib/errors";
+import {
+  createOneChallengeBodySchema,
+  updateOneChallengeBodySchema,
+} from "../schemas/challenge.schemas";
 
 const selectParams = {
   id: true,
@@ -70,11 +73,11 @@ const controller = {
   },
   // GET /challenges/:slug
   async findOne(req: Request, res: Response) {
-    const id = await parseIdFromParams(req.slug);
+    const slug = await parseSlugFromParams(req.params.slug);
 
     const challenge = await prisma.challenge.findFirst({
       where: {
-        id,
+        slug,
       },
       select: selectParams,
     });
@@ -95,7 +98,6 @@ const controller = {
     gameId              Int             @map("game_id")
     challengeCategoryId Int             @map("challenge_category_id")
     difficultyId        Int             @map("difficulty_id")
-  }
   */
 
   async createOne(req: Request, res: Response) {
@@ -119,7 +121,11 @@ const controller = {
 
     await prisma.challenge.create({
       data: {
-        userId: req.user.id,
+        user: {
+          connect: {
+            id: req.user.id,
+          },
+        },
         title,
         slug: generateSlug(title, username),
         description,
@@ -127,9 +133,21 @@ const controller = {
         demo: demo ?? null,
         goals: goals ?? null,
         closesAt: closesAt ?? null,
-        gameId,
-        challengeCategoryId,
-        difficultyId,
+        game: {
+          connect: {
+            id: gameId,
+          },
+        },
+        challengeCategory: {
+          connect: {
+            id: challengeCategoryId,
+          },
+        },
+        difficulty: {
+          connect: {
+            id: difficultyId,
+          },
+        },
       },
     });
 
@@ -137,8 +155,29 @@ const controller = {
       message: "Challenge successfully created.",
     });
   },
-  // PATCH /challenges/:id
-  // DELETE /challenges/:id
+  // PATCH /challenges/:slug
+  async updateChallenge(req: Request, res: Response) {
+    const slug = await parseSlugFromParams(req.params.slug);
+
+    const body = await updateOneChallengeBodySchema.parseAsync(req.body);
+
+    const data = Object.fromEntries(
+      Object.entries(body).filter(([, value]) => value !== undefined),
+    );
+
+    await prisma.challenge.update({
+      where: {
+        slug,
+      },
+      data,
+    });
+
+    res.status(200).send({
+      message: "Challenge successfully updated.",
+    });
+  },
+
+  // DELETE /challenges/:slug
 };
 
 export default controller;
