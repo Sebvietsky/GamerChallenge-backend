@@ -10,7 +10,18 @@ const CHALLENGES_PER_GAME = 5;
 
 // ─── Reference data ───────────────────────────────────────────────────────────
 
-const GAME_CATEGORIES = ["FPS", "RPG", "MMORPG", "Battle Royale", "Simulation", "Sport", "Plateforme", "Stratégie", "Horreur", "Combat"];
+const GAME_CATEGORIES = [
+  "FPS",
+  "RPG",
+  "MMORPG",
+  "Battle Royale",
+  "Simulation",
+  "Sport",
+  "Plateforme",
+  "Stratégie",
+  "Horreur",
+  "Combat",
+];
 
 const CHALLENGE_CATEGORIES = [
   { name: "Speedrun", colorCode: "#FF4500" },
@@ -58,7 +69,7 @@ function slugify(text: string): string {
 }
 
 function uniqueSlug(base: string, existing: Set<string>): string {
-  let slug = slugify(base);
+  const slug = slugify(base);
   let candidate = slug;
   let i = 2;
   while (existing.has(candidate)) {
@@ -76,7 +87,7 @@ function weightedPick<T>(weighted: { value: T; weight: number }[]): T {
     rand -= w.weight;
     if (rand <= 0) return w.value;
   }
-  return weighted[weighted.length - 1].value;
+  return weighted[weighted.length - 1]!.value;
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -185,15 +196,23 @@ async function main() {
   // Utilisateurs générés par Faker (tous active)
   const fakerUsers = await Promise.all(
     Array.from({ length: USERS_COUNT - 3 }).map(() => {
-      const username = faker.internet.username().replace(/[^a-zA-Z0-9_]/g, "").slice(0, 50) + faker.number.int({ min: 1, max: 999 });
+      const username =
+        faker.internet
+          .username()
+          .replace(/[^a-zA-Z0-9_]/g, "")
+          .slice(0, 50) + faker.number.int({ min: 1, max: 999 });
       return prisma.user.create({
         data: {
           username: username.slice(0, 50),
           email: faker.internet.email(),
           password: hashedPassword,
           country: faker.location.country().slice(0, 50),
-          bio: faker.helpers.maybe(() => faker.lorem.sentences({ min: 1, max: 3 }), { probability: 0.7 }),
-          profilePicture: faker.helpers.maybe(() => faker.image.avatar(), { probability: 0.6 }),
+          bio:
+            faker.helpers.maybe(() => faker.lorem.sentences({ min: 1, max: 3 }), {
+              probability: 0.7,
+            }) ?? null,
+          profilePicture:
+            faker.helpers.maybe(() => faker.image.avatar(), { probability: 0.6 }) ?? null,
           role: "user",
           status: "active",
         },
@@ -202,7 +221,9 @@ async function main() {
   );
 
   const allUsers = [...fixedUsers, ...fakerUsers];
-  console.log(`✅ ${allUsers.length} utilisateurs créés (admin, moderator, inactive + ${fakerUsers.length} users)`);
+  console.log(
+    `✅ ${allUsers.length} utilisateurs créés (admin, moderator, inactive + ${fakerUsers.length} users)`
+  );
 
   // ── Challenges ───────────────────────────────────────────────────────────────
   const challengeSlugs = new Set<string>();
@@ -215,22 +236,31 @@ async function main() {
   const allChallenges = [];
   for (const game of games) {
     for (let i = 0; i < CHALLENGES_PER_GAME; i++) {
-      const title = faker.helpers.fake("{{word.adjective}} {{word.noun}} Challenge sur " + game.name);
+      const title = faker.helpers.fake(
+        "{{word.adjective}} {{word.noun}} Challenge sur " + game.name
+      );
       const status = weightedPick(challengeStatusWeights);
       const challenge = await prisma.challenge.create({
         data: {
           title,
           slug: uniqueSlug(title, challengeSlugs),
           description: faker.lorem.paragraphs({ min: 1, max: 3 }),
-          hints: faker.helpers.maybe(() => faker.lorem.sentences({ min: 1, max: 2 }), { probability: 0.5 }),
-          demo: faker.helpers.maybe(() => faker.internet.url(), { probability: 0.4 }),
-          goals: faker.helpers.maybe(() => faker.lorem.sentences({ min: 1, max: 3 }), { probability: 0.6 }),
+          hints:
+            faker.helpers.maybe(() => faker.lorem.sentences({ min: 1, max: 2 }), {
+              probability: 0.5,
+            }) ?? null,
+          demo: faker.helpers.maybe(() => faker.internet.url(), { probability: 0.4 }) ?? null,
+          goals:
+            faker.helpers.maybe(() => faker.lorem.sentences({ min: 1, max: 3 }), {
+              probability: 0.6,
+            }) ?? null,
           closesAt:
             status === "active"
-              ? faker.helpers.maybe(() => faker.date.future({ years: 1 }), { probability: 0.4 })
+              ? (faker.helpers.maybe(() => faker.date.future({ years: 1 }), { probability: 0.4 }) ??
+                null)
               : status === "closed"
-              ? faker.date.past({ years: 1 })
-              : null,
+                ? faker.date.past({ years: 1 })
+                : null,
           status,
           visibility: true,
           gameId: game.id,
@@ -261,18 +291,23 @@ async function main() {
     const shuffledUsers = faker.helpers.shuffle([...allUsers]);
 
     for (let i = 0; i < Math.min(participantCount, shuffledUsers.length); i++) {
-      const user = shuffledUsers[i];
+      const user = shuffledUsers[i]!;
       const pairKey = `${user.id}-${challenge.id}`;
       if (participationPairs.has(pairKey)) continue;
       participationPairs.add(pairKey);
 
-      const title = faker.helpers.fake("Ma run sur {{word.noun}} — " + challenge.title.slice(0, 80));
+      const title = faker.helpers.fake(
+        "Ma run sur {{word.noun}} — " + challenge.title.slice(0, 80)
+      );
       const status = weightedPick(participationStatusWeights);
       const participation = await prisma.participation.create({
         data: {
           title: title.slice(0, 200),
           slug: uniqueSlug(title, participationSlugs),
-          description: faker.helpers.maybe(() => faker.lorem.paragraphs({ min: 1, max: 2 }), { probability: 0.6 }),
+          description:
+            faker.helpers.maybe(() => faker.lorem.paragraphs({ min: 1, max: 2 }), {
+              probability: 0.6,
+            }) ?? null,
           video: faker.internet.url(),
           status,
           visibility: true,
@@ -314,7 +349,9 @@ async function main() {
       const key = `${user.id}-${participation.id}`;
       if (participationVotePairs.has(key)) continue;
       participationVotePairs.add(key);
-      await prisma.participationVote.create({ data: { userId: user.id, participationId: participation.id } });
+      await prisma.participationVote.create({
+        data: { userId: user.id, participationId: participation.id },
+      });
       participationVotesCount++;
     }
   }
@@ -331,7 +368,9 @@ async function main() {
       const key = `${user.id}-${challenge.id}`;
       if (favoritePairs.has(key)) continue;
       favoritePairs.add(key);
-      await prisma.userFavoriteChallenge.create({ data: { userId: user.id, challengeId: challenge.id } });
+      await prisma.userFavoriteChallenge.create({
+        data: { userId: user.id, challengeId: challenge.id },
+      });
       favoritesCount++;
     }
   }
