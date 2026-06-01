@@ -42,7 +42,7 @@ const controller = {
     const passwordHash = await argon2.hash(password);
 
     // Create the new user in the database
-    const user = await prisma.user.create({
+    await prisma.user.create({
       data: {
         username,
         email,
@@ -53,10 +53,8 @@ const controller = {
       },
     });
 
-    const { password: _password, ...userWithoutPassword } = user;
-
     // Return created user (excluding password)
-    res.status(201).json(userWithoutPassword);
+    res.status(201).json({ message: "Compte créé avec succès" });
   },
 
   async loginUser(req: Request, res: Response): Promise<void> {

@@ -71,6 +71,26 @@ docker compose up --build
 
 L'API sera disponible sur `http://localhost:<API_LOCAL_PORT>`.
 
+### 6. Alimenter la base de données (optionnel)
+
+Une fois les conteneurs démarrés et les migrations appliquées :
+
+```bash
+pnpm run db:seed
+```
+
+Cela insère des données de test réalistes (jeux, challenges, utilisateurs, participations, votes).
+
+Comptes créés avec le mot de passe `Password123!` :
+
+| Email | Role |
+|---|---|
+| `admin@gamerchallenge.dev` | admin |
+| `moderator@gamerchallenge.dev` | moderator |
+| `inactive@gamerchallenge.dev` | user (inactif) |
+
+> Pour repartir d'une base vide et re-seeder en une commande : `pnpm run db:reset`
+
 ---
 
 ## Scripts disponibles
