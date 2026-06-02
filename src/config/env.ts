@@ -12,6 +12,8 @@ const env = {
   jwtSecret: requireEnv("JWT_SECRET"),
   nodeEnv: requireEnv("NODE_ENV"),
   allowedOrigins: requireEnv("ALLOWED_ORIGINS") || "*",
+  igdbClientId: requireEnv("IGDB_CLIENT_ID"),
+  igdbClientSecret: requireEnv("IGDB_CLIENT_SECRET"),
 };
 
 export default env;

@@ -20,7 +20,7 @@ app.use(
     // Le back renvoie un header Access-Control-Allow-Credentials
     // Ce qui autorise le front à exposer le JS
     credentials: true,
-  }),
+  })
 );
 
 app.use(cookieParser());

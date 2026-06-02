@@ -11,8 +11,7 @@ export function checkRoles(roles: UserRole[]) {
     // Si le token est valide, on récupère l'identité et le rôle de l'utilisateur.
     const { id, role } = verifyAndDecodeJWT(token);
     // Le middleware bloque l'accès si le rôle courant n'appartient pas aux rôles autorisés.
-    if (!roles.includes(role))
-      throw new ForbiddenError(`Permission denied for role ${role}`);
+    if (!roles.includes(role)) throw new ForbiddenError(`Permission denied for role ${role}`);
 
     // On enrichit la requête avec les infos d'identification utiles aux handlers suivants.
     req.user = { id, role };

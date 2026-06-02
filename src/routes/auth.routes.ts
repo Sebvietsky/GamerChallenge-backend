@@ -9,9 +9,19 @@ router.post("/login", controller.loginUser);
 router.post("/refresh", controller.refreshTokens);
 router.post("/register", controller.registerUser);
 router.post(
+  "/resetPassword",
+  checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
+  controller.resetPassword
+);
+router.post(
   "/logout",
   checkRoles([UserRole.user, UserRole.moderator, UserRole.admin]),
-  controller.logoutUser,
+  controller.logoutUser
+);
+router.get(
+  "/me",
+  checkRoles([UserRole.user, UserRole.moderator, UserRole.admin]),
+  controller.getConnectedUser
 );
 
 export default router;
