@@ -11,6 +11,7 @@ import {
   createOneChallengeBodySchema,
   updateOneChallengeBodySchema,
 } from "../schemas/challenge.schemas";
+import { findOrCreateGameFromIGDB } from "../utils/game.utils";
 
 const selectParams = {
   id: true,
@@ -119,7 +120,7 @@ const controller = {
       },
     });
 
-    const gameId = await findOrCreateGame(igdbId);
+    const gameId = await findOrCreateGameFromIGDB(igdbId);
 
     await prisma.challenge.create({
       data: {
@@ -189,7 +190,7 @@ const controller = {
       },
     });
 
-    res.send(204).end();
+    res.status(204).end();
   },
 };
 
