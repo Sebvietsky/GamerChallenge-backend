@@ -13,7 +13,7 @@ import {
 } from "../schemas/challenge.schemas";
 import { findOrCreateGameFromIGDB } from "../utils/game.utils";
 
-const selectParams = {
+const challengeSelectParams = {
   id: true,
   title: true,
   slug: true,
@@ -26,11 +26,29 @@ const selectParams = {
       studio: true,
       platform: true,
       coverUrl: true,
-      categories: true,
+      categories: {
+        select: {
+          category: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
     },
   },
-  challengeCategory: true,
-  difficulty: true,
+  challengeCategory: {
+    select: {
+      name: true,
+      colorCode: true,
+    },
+  },
+  difficulty: {
+    select: {
+      name: true,
+      colorCode: true,
+    },
+  },
   user: {
     select: {
       username: true,
@@ -48,6 +66,7 @@ const selectParams = {
 };
 
 const controller = {
+  // GET /challenges
   async findAll(req: Request, res: Response): Promise<void> {
     const { page, limit }: PaginationParams =
       await PaginationOutputSchema.parseAsync(req.query);
@@ -56,7 +75,7 @@ const controller = {
 
     const [challenges, total] = await Promise.all([
       prisma.challenge.findMany({
-        select: selectParams,
+        select: challengeSelectParams,
         skip,
         take,
       }),
@@ -64,14 +83,23 @@ const controller = {
       prisma.challenge.count(),
     ]);
 
+    const response = challenges.map((chall) => ({
+      ...chall,
+      game: {
+        ...chall.game,
+        categories: chall.game.categories.map(({ category }) => category.name),
+      },
+    }));
+
     res.status(200).json({
-      data: challenges,
+      data: response,
       page,
       limit,
       total,
       totalPages: Math.ceil(total / limit),
     });
   },
+
   // GET /challenges/:slug
   async findOne(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
@@ -80,15 +108,61 @@ const controller = {
       where: {
         slug,
       },
-      select: selectParams,
+      select: challengeSelectParams,
     });
 
     if (!challenge) throw new NotFoundError("Challenge not found.");
 
-    res.status(200).send(challenge);
-  },
-  // POST /challenges
+    const response = {
+      ...challenge,
+      game: {
+        ...challenge.game,
+        categories: challenge.game.categories.map(
+          ({ category }) => category.name,
+        ),
+      },
+    };
 
+    res.status(200).send(response);
+  },
+
+  // GET /challenges/:slug/participations
+  async findAllParticipationsWithinOneChallenge(req: Request, res: Response) {
+    const slug = await parseSlugFromParams(req.params.slug as string);
+
+    const { page, limit }: PaginationParams =
+      await PaginationOutputSchema.parseAsync(req.query);
+
+    const { skip, take } = getPaginationParams(page, limit);
+
+    const [participations, total] = await Promise.all([
+      prisma.participation.findMany({
+        where: {
+          challenge: {
+            slug,
+          },
+        },
+        select: {},
+        skip,
+        take,
+      }),
+
+      prisma.challenge.count(),
+    ]);
+
+    res.status(200).json({
+      data: participations,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    });
+  },
+
+  // GET /challenges/:slugChallenge/participations/:slugParticipation
+  async findOneParticipationWithinOneChallenge(req: Request, res: Response) {},
+
+  // POST /challenges
   /*
     title               String          @db.VarChar(200) => Dans le body
     description         String          @db.Text
@@ -100,7 +174,6 @@ const controller = {
     challengeCategoryId Int             @map("challenge_category_id")
     difficultyId        Int             @map("difficulty_id")
   */
-
   async createOne(req: Request, res: Response) {
     const {
       title,
@@ -158,6 +231,12 @@ const controller = {
       message: "Challenge successfully created.",
     });
   },
+
+  // POST /challenges/:slug/participations
+  async createOneParticipationWithinOneChallenge(
+    req: Request,
+    res: Response,
+  ) {},
   // PATCH /challenges/:slug
   async updateOne(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
@@ -180,6 +259,11 @@ const controller = {
     });
   },
 
+  // PATCH /challenges/:slugChallenge/participations:slugParticipation
+  async updateOneParticipationWithinOneChallenge(
+    req: Request,
+    res: Response,
+  ) {},
   // DELETE /challenges/:slug
   async deleteOne(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
@@ -192,6 +276,12 @@ const controller = {
 
     res.status(204).end();
   },
+
+  // DELETE /challenges/:slugChallenge/participations:slugParticipation
+  async deleteOneParticipationWithinOneChallenge(
+    req: Request,
+    res: Response,
+  ) {},
 };
 
 export default controller;
