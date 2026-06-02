@@ -7,8 +7,6 @@ import {
   type PaginationParams,
   type QueryChallengeParams,
 } from "../schemas/query.schemas";
-  type PaginationParams,
-} from "../schemas/query.schemas";
 import { generateSlug, parseSlugFromParams } from "../utils/controller.utils";
 import { NotFoundError } from "../lib/errors";
 import {
@@ -142,7 +140,7 @@ const controller = {
     const [challenges, total] = await Promise.all([
       prisma.challenge.findMany({
         where,
-        select: selectParams,
+        select: challengeSelectParams,
         skip,
         take,
         orderBy: orderByClause,
