@@ -71,7 +71,8 @@ const challengeSelectParams = {
 const controller = {
   // GET /challenges
   async findAll(req: Request, res: Response): Promise<void> {
-    const { page, limit }: PaginationParams = await PaginationOutputSchema.parseAsync(req.query);
+    const { page, limit }: PaginationParams =
+      await PaginationOutputSchema.parseAsync(req.query);
     const {
       search,
       category,
@@ -83,14 +84,18 @@ const controller = {
       closesBefore,
       orderBy,
       sort,
-    }: QueryChallengeParams = await QueryChallengeOutputSchema.parseAsync(req.query);
+    }: QueryChallengeParams = await QueryChallengeOutputSchema.parseAsync(
+      req.query,
+    );
 
     const where: Prisma.ChallengeWhereInput = {
       ...(search && { title: { contains: search, mode: "insensitive" } }),
       ...(category && { challengeCategory: { name: category } }),
       ...(game && { game: { name: { contains: game, mode: "insensitive" } } }),
       ...(difficulty && { difficulty: { name: difficulty } }),
-      ...(creator && { user: { username: { contains: creator, mode: "insensitive" } } }),
+      ...(creator && {
+        user: { username: { contains: creator, mode: "insensitive" } },
+      }),
       ...(status && { status }),
       /*
         Filtre par date de fermeture. Les challenges dont closesAt est NULL (sans date de fin)
@@ -192,6 +197,42 @@ const controller = {
     res.status(200).send(response);
   },
 
+  // GET /challenges/:slug/participations
+  async findAllParticipationsWithinOneChallenge(req: Request, res: Response) {
+    const slug = await parseSlugFromParams(req.params.slug as string);
+
+    const { page, limit }: PaginationParams =
+      await PaginationOutputSchema.parseAsync(req.query);
+
+    const { skip, take } = getPaginationParams(page, limit);
+
+    const [participations, total] = await Promise.all([
+      prisma.participation.findMany({
+        where: {
+          challenge: {
+            slug,
+          },
+        },
+        select: {},
+        skip,
+        take,
+      }),
+
+      prisma.challenge.count(),
+    ]);
+
+    res.status(200).json({
+      data: participations,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    });
+  },
+
+  // GET /challenges/:slugChallenge/participations/:slugParticipation
+  async findOneParticipationWithinOneChallenge(req: Request, res: Response) {},
+
   // POST /challenges
   /*
     title               String          @db.VarChar(200) => Dans le body
@@ -262,6 +303,12 @@ const controller = {
     });
   },
 
+  // POST /challenges/:slug/participations
+  async createOneParticipationWithinOneChallenge(
+    req: Request,
+    res: Response,
+  ) {},
+
   // PATCH /challenges/:slug
   async updateOne(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
@@ -290,6 +337,12 @@ const controller = {
     });
   },
 
+  // PATCH /challenges/:slugChallenge/participations:slugParticipation
+  async updateOneParticipationWithinOneChallenge(
+    req: Request,
+    res: Response,
+  ) {},
+
   // DELETE /challenges/:slug
   async deleteOne(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
@@ -302,6 +355,12 @@ const controller = {
 
     res.status(204).end();
   },
+
+  // DELETE /challenges/:slugChallenge/participations:slugParticipation
+  async deleteOneParticipationWithinOneChallenge(
+    req: Request,
+    res: Response,
+  ) {},
 };
 
 export default controller;
