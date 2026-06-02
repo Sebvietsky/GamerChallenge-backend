@@ -7,7 +7,12 @@ import {
   type PaginationParams,
   type QueryChallengeParams,
 } from "../schemas/query.schemas";
-import { generateSlug, parseSlugFromParams } from "../utils/controller.utils";
+import {
+  generateSlug,
+  parseSlugFromParams,
+  challengeSelectParams,
+  participationSelectParams,
+} from "../utils/controller.utils";
 import { NotFoundError } from "../lib/errors";
 import {
   createOneChallengeBodySchema,
@@ -15,58 +20,6 @@ import {
   type updateOneChallengeParams,
 } from "../schemas/challenge.schemas";
 import { findOrCreateGameFromIGDB } from "../utils/game.utils";
-
-const challengeSelectParams = {
-  id: true,
-  title: true,
-  slug: true,
-  closesAt: true,
-  status: true,
-  createdAt: true,
-  game: {
-    select: {
-      name: true,
-      studio: true,
-      platform: true,
-      coverUrl: true,
-      categories: {
-        select: {
-          category: {
-            select: {
-              name: true,
-            },
-          },
-        },
-      },
-    },
-  },
-  challengeCategory: {
-    select: {
-      name: true,
-      colorCode: true,
-    },
-  },
-  difficulty: {
-    select: {
-      name: true,
-      colorCode: true,
-    },
-  },
-  user: {
-    select: {
-      username: true,
-      country: true,
-      profilePicture: true,
-    },
-  },
-  _count: {
-    select: {
-      participations: true,
-      favoritedBy: true,
-      votes: true,
-    },
-  },
-};
 
 const controller = {
   // GET /challenges
@@ -175,7 +128,7 @@ const controller = {
   async findOne(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
 
-    const challenge = await prisma.challenge.findFirst({
+    const challenge = await prisma.challenge.findUniqueOrThrow({
       where: {
         slug,
       },
@@ -213,12 +166,19 @@ const controller = {
             slug,
           },
         },
-        select: {},
+        select: participationSelectParams,
+        
         skip,
         take,
       }),
 
-      prisma.challenge.count(),
+      prisma.participation.count({
+        where: {
+          challenge: {
+            slug,
+          },
+        },
+      }),
     ]);
 
     res.status(200).json({
@@ -229,9 +189,6 @@ const controller = {
       totalPages: Math.ceil(total / limit),
     });
   },
-
-  // GET /challenges/:slugChallenge/participations/:slugParticipation
-  async findOneParticipationWithinOneChallenge(req: Request, res: Response) {},
 
   // POST /challenges
   /*
@@ -337,12 +294,7 @@ const controller = {
     });
   },
 
-  // PATCH /challenges/:slugChallenge/participations:slugParticipation
-  async updateOneParticipationWithinOneChallenge(
-    req: Request,
-    res: Response,
-  ) {},
-
+  
   // DELETE /challenges/:slug
   async deleteOne(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
@@ -356,11 +308,6 @@ const controller = {
     res.status(204).end();
   },
 
-  // DELETE /challenges/:slugChallenge/participations:slugParticipation
-  async deleteOneParticipationWithinOneChallenge(
-    req: Request,
-    res: Response,
-  ) {},
 };
 
 export default controller;

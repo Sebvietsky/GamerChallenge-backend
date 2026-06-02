@@ -77,3 +77,89 @@ export function generateSlug(title: string, username?: string): string {
     return slug;
   }
 }
+
+export const gameSelectParams = {
+  select: {
+    name: true,
+    studio: true,
+    platform: true,
+    coverUrl: true,
+    categories: {
+      select: {
+        category: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    },
+  },
+};
+
+export const challengeCategorySelectParams = {
+  select: {
+    name: true,
+    colorCode: true,
+  },
+};
+
+export const difficultySelectParams = {
+  select: {
+    name: true,
+    colorCode: true,
+  },
+};
+
+export const userSelectParams = {
+  select: {
+    username: true,
+    country: true,
+    profilePicture: true,
+  },
+};
+
+export const challengeSelectParams = {
+  id: true,
+  title: true,
+  slug: true,
+  closesAt: true,
+  status: true,
+  createdAt: true,
+  game: gameSelectParams,
+  challengeCategory: challengeCategorySelectParams,
+  difficulty: difficultySelectParams,
+  user: userSelectParams,
+  _count: {
+    select: {
+      participations: true,
+      favoritedBy: true,
+      votes: true,
+    },
+  },
+};
+
+export const participationSelectParams = {
+  video: true,
+  title: true,
+  slug: true,
+  description: true,
+  status: true,
+  visibility: true,
+  challenge: {
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      game: gameSelectParams,
+      challengeCategory: challengeCategorySelectParams,
+      difficulty: difficultySelectParams,
+      user: userSelectParams,
+    },
+  },
+  user: userSelectParams,
+  _count: {
+    select: {
+      votes: true,
+    },
+  },
+};
