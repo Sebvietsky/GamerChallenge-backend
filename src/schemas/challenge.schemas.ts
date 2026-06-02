@@ -19,7 +19,7 @@ export const createOneChallengeBodySchema = z.object({
   hints: z.string().min(2).optional(),
   demo: z.string().min(2).optional(),
   goals: z.string().min(2).optional(),
-  closesAt: z.date().optional(),
+  closesAt: z.coerce.date().optional(),
   igdbId: z.coerce.number().int().min(1),
   challengeCategoryId: z.coerce.number().int().min(1),
   difficultyId: z.coerce.number().int().min(1),
@@ -31,8 +31,12 @@ export const updateOneChallengeBodySchema = z.object({
   hints: z.string().min(2).optional(),
   demo: z.string().min(2).optional(),
   goals: z.string().min(2).optional(),
-  closesAt: z.date().optional(),
-  gameId: z.coerce.number().int().min(1).optional(),
+  closesAt: z.coerce.date().optional(),
+  igdbId: z.coerce.number().int().min(1).optional(),
   challengeCategoryId: z.coerce.number().int().min(1).optional(),
   difficultyId: z.coerce.number().int().min(1).optional(),
 });
+
+export type updateOneChallengeParams = z.input<
+  typeof updateOneChallengeBodySchema
+>;
