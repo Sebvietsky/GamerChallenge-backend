@@ -50,3 +50,5 @@ const controller = {
     res: Response,
   ) {},
 };
+
+export default controller;
