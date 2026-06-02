@@ -43,16 +43,26 @@ const DIFFICULTIES = [
 ];
 
 const GAMES = [
-  { name: "Elden Ring", studio: "FromSoftware", platform: "PC / PS5 / Xbox" },
-  { name: "Dark Souls III", studio: "FromSoftware", platform: "PC / PS4 / Xbox" },
-  { name: "The Legend of Zelda: Breath of the Wild", studio: "Nintendo", platform: "Switch" },
-  { name: "Sekiro: Shadows Die Twice", studio: "FromSoftware", platform: "PC / PS4 / Xbox" },
-  { name: "Hollow Knight", studio: "Team Cherry", platform: "PC / Switch / PS4" },
-  { name: "Celeste", studio: "Maddy Makes Games", platform: "PC / Switch / PS4" },
-  { name: "Minecraft", studio: "Mojang", platform: "PC / Console / Mobile" },
-  { name: "Fortnite", studio: "Epic Games", platform: "PC / Console / Mobile" },
-  { name: "League of Legends", studio: "Riot Games", platform: "PC" },
-  { name: "Valorant", studio: "Riot Games", platform: "PC" },
+  { igdbId: 119133, name: "Elden Ring", studio: "FromSoftware", platform: "PC / PS5 / Xbox" },
+  { igdbId: 11133, name: "Dark Souls III", studio: "FromSoftware", platform: "PC / PS4 / Xbox" },
+  {
+    igdbId: 7346,
+    name: "The Legend of Zelda: Breath of the Wild",
+    studio: "Nintendo",
+    platform: "Switch",
+  },
+  {
+    igdbId: 101606,
+    name: "Sekiro: Shadows Die Twice",
+    studio: "FromSoftware",
+    platform: "PC / PS4 / Xbox",
+  },
+  { igdbId: 36083, name: "Hollow Knight", studio: "Team Cherry", platform: "PC / Switch / PS4" },
+  { igdbId: 45691, name: "Celeste", studio: "Maddy Makes Games", platform: "PC / Switch / PS4" },
+  { igdbId: 121, name: "Minecraft", studio: "Mojang", platform: "PC / Console / Mobile" },
+  { igdbId: 1905, name: "Fortnite", studio: "Epic Games", platform: "PC / Console / Mobile" },
+  { igdbId: 115, name: "League of Legends", studio: "Riot Games", platform: "PC" },
+  { igdbId: 126459, name: "Valorant", studio: "Riot Games", platform: "PC" },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

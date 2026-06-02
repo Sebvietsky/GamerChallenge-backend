@@ -9,6 +9,10 @@ export function globalErrorHandler(
   res: Response,
   _next: NextFunction
 ) {
+  if ("type" in error && error.type === "entity.parse.failed") {
+    return res.status(400).json({ status: 400, error: "Invalid JSON body" });
+  }
+
   if (error instanceof z.ZodError) {
     console.info("ZodError", error);
 

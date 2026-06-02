@@ -76,6 +76,7 @@ model User {
 
 model Game {
   id         Int      @id @default(autoincrement())
+  igdbId     Int?     @unique @map("igdb_id")
   name       String   @db.VarChar(200)
   studio     String?  @db.VarChar(150)
   platform   String?  @db.VarChar(100)
