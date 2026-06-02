@@ -1,12 +1,10 @@
 import type { PaginationOutput } from "../lib/interface";
 
-export function getPaginationParams(page?: number, limit?: number): PaginationOutput {
-  const currentPage: number = page ?? 1;
-  const currentLimit: number = limit ?? 20;
+export function getPaginationParams(page: number, limit: number): PaginationOutput {
   return {
-    skip: (currentPage - 1) * currentLimit,
-    take: currentLimit,
-    page: currentPage,
-    limit: currentLimit,
+    skip: (page - 1) * limit,
+    take: limit,
+    page: page,
+    limit,
   };
 }
