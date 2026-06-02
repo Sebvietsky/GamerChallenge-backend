@@ -5,8 +5,8 @@ import {
   PaginationOutputSchema,
   type PaginationParams,
 } from "../schemas/query.schemas";
-import { generateSlug, parseSlugFromParams } from "./utils";
-import { BadRequestError, NotFoundError } from "../lib/errors";
+import { generateSlug, parseSlugFromParams } from "../utils/controller.utils";
+import { NotFoundError } from "../lib/errors";
 import {
   createOneChallengeBodySchema,
   updateOneChallengeBodySchema,
@@ -73,7 +73,7 @@ const controller = {
   },
   // GET /challenges/:slug
   async findOne(req: Request, res: Response) {
-    const slug = await parseSlugFromParams(req.params.slug);
+    const slug = await parseSlugFromParams(req.params.slug as string);
 
     const challenge = await prisma.challenge.findFirst({
       where: {
@@ -108,7 +108,7 @@ const controller = {
       demo,
       goals,
       closesAt,
-      gameId,
+      igdbId,
       challengeCategoryId,
       difficultyId,
     } = await createOneChallengeBodySchema.parseAsync(req.body);
@@ -118,6 +118,8 @@ const controller = {
         id: req.user.id,
       },
     });
+
+    const gameId = await findOrCreateGame(igdbId);
 
     await prisma.challenge.create({
       data: {
@@ -156,8 +158,8 @@ const controller = {
     });
   },
   // PATCH /challenges/:slug
-  async updateChallenge(req: Request, res: Response) {
-    const slug = await parseSlugFromParams(req.params.slug);
+  async updateOne(req: Request, res: Response) {
+    const slug = await parseSlugFromParams(req.params.slug as string);
 
     const body = await updateOneChallengeBodySchema.parseAsync(req.body);
 
@@ -179,7 +181,7 @@ const controller = {
 
   // DELETE /challenges/:slug
   async deleteOne(req: Request, res: Response) {
-    const slug = await parseSlugFromParams(req.params.slug);
+    const slug = await parseSlugFromParams(req.params.slug as string);
 
     await prisma.challenge.delete({
       where: {

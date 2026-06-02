@@ -20,7 +20,7 @@ export const createOneChallengeBodySchema = z.object({
   demo: z.string().min(2).optional(),
   goals: z.string().min(2).optional(),
   closesAt: z.date().optional(),
-  gameId: z.coerce.number().int().min(1),
+  igdbId: z.coerce.number().int().min(1),
   challengeCategoryId: z.coerce.number().int().min(1),
   difficultyId: z.coerce.number().int().min(1),
 });
