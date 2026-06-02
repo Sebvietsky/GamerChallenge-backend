@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { prisma } from "../lib/prisma";
+import { Prisma, prisma } from "../lib/prisma";
 import { getPaginationParams } from "../utils/pagination.utils";
 import {
   PaginationOutputSchema,
@@ -10,10 +10,11 @@ import { NotFoundError } from "../lib/errors";
 import {
   createOneChallengeBodySchema,
   updateOneChallengeBodySchema,
+  type updateOneChallengeParams,
 } from "../schemas/challenge.schemas";
 import { findOrCreateGameFromIGDB } from "../utils/game.utils";
 
-const selectParams = {
+const challengeSelectParams = {
   id: true,
   title: true,
   slug: true,
@@ -26,11 +27,29 @@ const selectParams = {
       studio: true,
       platform: true,
       coverUrl: true,
-      categories: true,
+      categories: {
+        select: {
+          category: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
     },
   },
-  challengeCategory: true,
-  difficulty: true,
+  challengeCategory: {
+    select: {
+      name: true,
+      colorCode: true,
+    },
+  },
+  difficulty: {
+    select: {
+      name: true,
+      colorCode: true,
+    },
+  },
   user: {
     select: {
       username: true,
@@ -48,6 +67,7 @@ const selectParams = {
 };
 
 const controller = {
+  // GET /challenges
   async findAll(req: Request, res: Response): Promise<void> {
     const { page, limit }: PaginationParams =
       await PaginationOutputSchema.parseAsync(req.query);
@@ -56,7 +76,7 @@ const controller = {
 
     const [challenges, total] = await Promise.all([
       prisma.challenge.findMany({
-        select: selectParams,
+        select: challengeSelectParams,
         skip,
         take,
       }),
@@ -64,14 +84,23 @@ const controller = {
       prisma.challenge.count(),
     ]);
 
+    const response = challenges.map((chall) => ({
+      ...chall,
+      game: {
+        ...chall.game,
+        categories: chall.game.categories.map(({ category }) => category.name),
+      },
+    }));
+
     res.status(200).json({
-      data: challenges,
+      data: response,
       page,
       limit,
       total,
       totalPages: Math.ceil(total / limit),
     });
   },
+
   // GET /challenges/:slug
   async findOne(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
@@ -80,15 +109,25 @@ const controller = {
       where: {
         slug,
       },
-      select: selectParams,
+      select: challengeSelectParams,
     });
 
     if (!challenge) throw new NotFoundError("Challenge not found.");
 
-    res.status(200).send(challenge);
-  },
-  // POST /challenges
+    const response = {
+      ...challenge,
+      game: {
+        ...challenge.game,
+        categories: challenge.game.categories.map(
+          ({ category }) => category.name,
+        ),
+      },
+    };
 
+    res.status(200).send(response);
+  },
+
+  // POST /challenges
   /*
     title               String          @db.VarChar(200) => Dans le body
     description         String          @db.Text
@@ -100,7 +139,6 @@ const controller = {
     challengeCategoryId Int             @map("challenge_category_id")
     difficultyId        Int             @map("difficulty_id")
   */
-
   async createOne(req: Request, res: Response) {
     const {
       title,
@@ -158,15 +196,22 @@ const controller = {
       message: "Challenge successfully created.",
     });
   },
+
   // PATCH /challenges/:slug
   async updateOne(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
 
-    const body = await updateOneChallengeBodySchema.parseAsync(req.body);
+    const { igdbId, ...body }: updateOneChallengeParams =
+      await updateOneChallengeBodySchema.parseAsync(req.body);
 
-    const data = Object.fromEntries(
-      Object.entries(body).filter(([, value]) => value !== undefined),
-    );
+    const data = body as Prisma.ChallengeUncheckedUpdateInput;
+
+    let gameId: number;
+
+    if (igdbId) {
+      gameId = await findOrCreateGameFromIGDB(igdbId as number);
+      data.gameId = gameId;
+    }
 
     await prisma.challenge.update({
       where: {
