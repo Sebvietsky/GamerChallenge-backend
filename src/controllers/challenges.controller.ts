@@ -47,11 +47,43 @@ const selectParams = {
   },
 };
 
+const selectParams = {
+  id: true,
+  title: true,
+  slug: true,
+  closesAt: true,
+  status: true,
+  createdAt: true,
+  game: {
+    select: {
+      name: true,
+      studio: true,
+      platform: true,
+      coverUrl: true,
+      categories: true,
+    },
+  },
+  challengeCategory: true,
+  difficulty: true,
+  user: {
+    select: {
+      username: true,
+      country: true,
+      profilePicture: true,
+    },
+  },
+  _count: {
+    select: {
+      participations: true,
+      favoritedBy: true,
+      votes: true,
+    },
+  },
+};
+
 const controller = {
-  // GET /challenges
-  async findAll(req: Request, res: Response) {
-    const { page, limit }: PaginationParams =
-      await PaginationOutputSchema.parseAsync(req.query);
+  async findAll(req: Request, res: Response): Promise<void> {
+    const { page, limit }: PaginationParams = await PaginationOutputSchema.parseAsync(req.query);
 
     const { skip, take } = getPaginationParams(page, limit);
 
@@ -70,6 +102,7 @@ const controller = {
       page,
       limit,
       total,
+      totalPages: Math.ceil(total / limit),
     });
   },
   // GET /challenges/:slug
