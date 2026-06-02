@@ -31,6 +31,8 @@ jobs:
       JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-secret-key-not-for-production' }}
       NODE_ENV: test
       ALLOWED_ORIGINS: http://localhost:3000
+      IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID }}
+      IGDB_CLIENT_SECRET: ${{ secrets.IGDB_CLIENT_SECRET }}
 
     steps:
       - name: Checkout

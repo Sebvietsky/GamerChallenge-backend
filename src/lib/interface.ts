@@ -21,3 +21,16 @@ export interface PaginationOutput {
   page: number;
   limit: number;
 }
+
+export interface IGDBGame {
+  id: number;
+  name: string;
+  summary?: string;
+  cover?: { url: string };
+  platforms?: Array<{ name: string }>;
+  genres?: Array<{ name: string }>;
+  involved_companies?: Array<{
+    developer: boolean;
+    company: { name: string };
+  }>;
+}
