@@ -79,17 +79,15 @@ export function generateSlug(title: string, username?: string): string {
 }
 
 export const gameSelectParams = {
-  select: {
-    name: true,
-    studio: true,
-    platform: true,
-    coverUrl: true,
-    categories: {
-      select: {
-        category: {
-          select: {
-            name: true,
-          },
+  name: true,
+  studio: true,
+  platform: true,
+  coverUrl: true,
+  categories: {
+    select: {
+      category: {
+        select: {
+          name: true,
         },
       },
     },
@@ -97,25 +95,19 @@ export const gameSelectParams = {
 };
 
 export const challengeCategorySelectParams = {
-  select: {
-    name: true,
-    colorCode: true,
-  },
+  name: true,
+  colorCode: true,
 };
 
 export const difficultySelectParams = {
-  select: {
-    name: true,
-    colorCode: true,
-  },
+  name: true,
+  colorCode: true,
 };
 
 export const userSelectParams = {
-  select: {
-    username: true,
-    country: true,
-    profilePicture: true,
-  },
+  username: true,
+  country: true,
+  profilePicture: true,
 };
 
 export const challengeSelectParams = {
@@ -125,10 +117,10 @@ export const challengeSelectParams = {
   closesAt: true,
   status: true,
   createdAt: true,
-  game: gameSelectParams,
-  challengeCategory: challengeCategorySelectParams,
-  difficulty: difficultySelectParams,
-  user: userSelectParams,
+  game: { select: gameSelectParams },
+  challengeCategory: { select: challengeCategorySelectParams },
+  difficulty: { select: difficultySelectParams },
+  user: { select: userSelectParams },
   _count: {
     select: {
       participations: true,
@@ -150,13 +142,13 @@ export const participationSelectParams = {
       id: true,
       title: true,
       slug: true,
-      game: gameSelectParams,
-      challengeCategory: challengeCategorySelectParams,
-      difficulty: difficultySelectParams,
-      user: userSelectParams,
+      game: { select: gameSelectParams },
+      challengeCategory: { select: challengeCategorySelectParams },
+      difficulty: { select: difficultySelectParams },
+      user: { select: userSelectParams },
     },
   },
-  user: userSelectParams,
+  user: { select: userSelectParams },
   _count: {
     select: {
       votes: true,
