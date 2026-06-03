@@ -16,8 +16,13 @@ export async function findOrCreateGameFromIGDB(igdbId: number): Promise<number> 
 
   if (!igdbGame) throw new NotFoundError("Game not found on IGDB");
 
-  const developer = igdbGame.involved_companies?.find((ic) => ic.developer)?.company.name ?? null;
-  const platforms = igdbGame.platforms?.map((p) => p.name).join(", ") ?? null;
+  const developer =
+    (igdbGame.involved_companies?.find((ic) => ic.developer)?.company.name ?? null)?.slice(
+      0,
+      150
+    ) ?? null;
+  const platforms =
+    (igdbGame.platforms?.map((p) => p.name).join(", ") ?? null)?.slice(0, 100) ?? null;
   const coverUrl = igdbGame.cover ? buildCoverUrl(igdbGame.cover.url) : null;
 
   const categoryIds = await Promise.all(
