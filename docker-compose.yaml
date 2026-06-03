@@ -47,4 +47,4 @@ volumes: # Liste de nos volumes
 
 networks:
   gamer_network:
-    external: true # Réseau créé manuellement via "docker network create gamer_network" — external: true empêche Compose de le recréer avec un préfixe différent
+    name: gamer_network # Force le nom exact sans préfixe — le frontend peut le rejoindre en external: true
