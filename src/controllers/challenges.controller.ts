@@ -2,8 +2,10 @@ import type { Request, Response } from "express";
 import { Prisma, prisma } from "../lib/prisma";
 import { getPaginationParams } from "../utils/pagination.utils";
 import {
+  FindBestQuerySchema,
   PaginationOutputSchema,
   QueryChallengeOutputSchema,
+  type FindBestQueryParams,
   type PaginationParams,
   type QueryChallengeParams,
 } from "../schemas/query.schemas";
@@ -69,6 +71,65 @@ const challengeSelectParams = {
 };
 
 const controller = {
+  // GET /home?sortBy=Like&Since=""
+  async findBest(req: Request, res: Response): Promise<void> {
+    const { since, limit, sortBy }: FindBestQueryParams = await FindBestQuerySchema.parseAsync(
+      req.query
+    );
+
+    /*
+      Convertit le paramètre `since` en date de début de période.
+      Sans `since`, sinceDate reste undefined et aucun filtre de date n'est appliqué (all time).
+    */
+
+    const SINCE_DAYS: Record<NonNullable<FindBestQueryParams["since"]>, number> = {
+      "1w": 7,
+      "1m": 30,
+      "3m": 90,
+      "6m": 180,
+      "1y": 365,
+    };
+
+    const sinceDate = since
+      ? new Date(Date.now() - SINCE_DAYS[since] * 24 * 60 * 60 * 1000)
+      : undefined;
+
+    /*
+      Mappe `sortBy` vers la clause Prisma correspondante.
+      votes/participations trient par _count (nombre de relations),
+      createdAt trie directement sur le champ scalaire.
+    */
+
+    const ORDER_BY_MAP: Record<
+      NonNullable<FindBestQueryParams["sortBy"]>,
+      Prisma.ChallengeOrderByWithRelationInput
+    > = {
+      votes: { votes: { _count: "desc" } },
+      participations: { participations: { _count: "desc" } },
+      createdAt: { createdAt: "desc" },
+    };
+
+    const challenges = await prisma.challenge.findMany({
+      where: {
+        ...(sinceDate && { createdAt: { gte: sinceDate } }),
+      },
+      select: challengeSelectParams,
+      orderBy: ORDER_BY_MAP[sortBy],
+      take: limit,
+    });
+
+    // Aplatit les catégories de jeu : [{ category: { name } }] → [name]
+    const response = challenges.map((chall) => ({
+      ...chall,
+      game: {
+        ...chall.game,
+        categories: chall.game.categories.map(({ category }) => category.name),
+      },
+    }));
+
+    res.status(200).json({ data: response });
+  },
+
   // GET /challenges
   async findAll(req: Request, res: Response): Promise<void> {
     const { page, limit }: PaginationParams = await PaginationOutputSchema.parseAsync(req.query);
@@ -92,11 +153,13 @@ const controller = {
       ...(difficulty && { difficulty: { name: difficulty } }),
       ...(creator && { user: { username: { contains: creator, mode: "insensitive" } } }),
       ...(status && { status }),
+
       /*
         Filtre par date de fermeture. Les challenges dont closesAt est NULL (sans date de fin)
         sont exclus dès qu'un filtre de date est appliqué — ils apparaissent dans le listing général.
         gte = "greater than or equal" (supérieur ou égal), lte = "less than or equal" (inférieur ou égal).
       */
+
       ...((closesAfter || closesBefore) && {
         closesAt: {
           ...(closesAfter && { gte: closesAfter }),
@@ -183,9 +246,7 @@ const controller = {
       ...challenge,
       game: {
         ...challenge.game,
-        categories: challenge.game.categories.map(
-          ({ category }) => category.name,
-        ),
+        categories: challenge.game.categories.map(({ category }) => category.name),
       },
     };
 

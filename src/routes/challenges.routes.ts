@@ -6,21 +6,22 @@ import { UserRole } from "../lib/prisma";
 const router: Router = Router();
 
 router.get("/", controller.findAll);
+router.get("/home", controller.findBest);
 router.get("/:slug", controller.findOne);
 router.post(
   "/",
   checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
-  controller.createOne,
+  controller.createOne
 );
 router.patch(
   "/:slug",
   checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
-  controller.updateOne,
+  controller.updateOne
 );
 router.delete(
   "/:slug",
   checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
-  controller.deleteOne,
+  controller.deleteOne
 );
 
 export default router;
