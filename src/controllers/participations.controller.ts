@@ -56,7 +56,7 @@ const controller = {
     });
   },
 
-  // DELETE /challenges/:slugChallenge/participations/:slugParticipation
+  // DELETE /participations/:slug
   async deleteOneParticipationWithinOneChallenge(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
 
