@@ -24,6 +24,14 @@ import {
 } from "../schemas/challenge.schemas";
 import { findOrCreateGameFromIGDB } from "../utils/game.utils";
 
+const SINCE_DAYS: Record<NonNullable<FindBestQueryParams["since"]>, number> = {
+  "1w": 7,
+  "1m": 30,
+  "3m": 90,
+  "6m": 180,
+  "1y": 365,
+};
+
 const controller = {
   // GET /home?sortBy=Like&Since=""
   async findBest(req: Request, res: Response): Promise<void> {
@@ -35,14 +43,6 @@ const controller = {
       Convertit le paramètre `since` en date de début de période.
       Sans `since`, sinceDate reste undefined et aucun filtre de date n'est appliqué (all time).
     */
-
-    const SINCE_DAYS: Record<NonNullable<FindBestQueryParams["since"]>, number> = {
-      "1w": 7,
-      "1m": 30,
-      "3m": 90,
-      "6m": 180,
-      "1y": 365,
-    };
 
     const sinceDate = since
       ? new Date(Date.now() - SINCE_DAYS[since] * 24 * 60 * 60 * 1000)
@@ -94,14 +94,20 @@ const controller = {
       difficulty,
       creator,
       status,
+      since,
       closesAfter,
       closesBefore,
       orderBy,
       sort,
     }: QueryChallengeParams = await QueryChallengeOutputSchema.parseAsync(req.query);
 
+    const sinceDate = since
+      ? new Date(Date.now() - SINCE_DAYS[since] * 24 * 60 * 60 * 1000)
+      : undefined;
+
     const where: Prisma.ChallengeWhereInput = {
       ...(search && { title: { contains: search, mode: "insensitive" } }),
+      ...(sinceDate && { createdAt: { gte: sinceDate } }),
       ...(category && { challengeCategory: { name: category } }),
       ...(game && { game: { name: { contains: game, mode: "insensitive" } } }),
       ...(difficulty && { difficulty: { name: difficulty } }),
