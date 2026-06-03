@@ -7,7 +7,7 @@ const router: Router = Router();
 
 router.get("/", controller.findAll);
 router.get("/:slug", controller.findOne);
-router.get("/:slug/participations", controller.findOne);
+router.get("/:slug/participations", controller.findAllParticipationsWithinOneChallenge);
 router.post(
   "/",
   checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
@@ -16,7 +16,7 @@ router.post(
 router.post(
   "/:slug/participations",
   checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
-  controller.createOne
+  controller.createOneParticipationWithinOneChallenge
 );
 router.patch(
   "/:slug",
