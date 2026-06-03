@@ -16,6 +16,7 @@ import {
 import { NotFoundError } from "../lib/errors";
 import {
   createOneChallengeBodySchema,
+  createOneParticipationWithinOneChallengeBodySchema,
   updateOneChallengeBodySchema,
   type updateOneChallengeParams,
 } from "../schemas/challenge.schemas";
@@ -24,8 +25,7 @@ import { findOrCreateGameFromIGDB } from "../utils/game.utils";
 const controller = {
   // GET /challenges
   async findAll(req: Request, res: Response): Promise<void> {
-    const { page, limit }: PaginationParams =
-      await PaginationOutputSchema.parseAsync(req.query);
+    const { page, limit }: PaginationParams = await PaginationOutputSchema.parseAsync(req.query);
     const {
       search,
       category,
@@ -37,9 +37,7 @@ const controller = {
       closesBefore,
       orderBy,
       sort,
-    }: QueryChallengeParams = await QueryChallengeOutputSchema.parseAsync(
-      req.query,
-    );
+    }: QueryChallengeParams = await QueryChallengeOutputSchema.parseAsync(req.query);
 
     const where: Prisma.ChallengeWhereInput = {
       ...(search && { title: { contains: search, mode: "insensitive" } }),
@@ -141,9 +139,7 @@ const controller = {
       ...challenge,
       game: {
         ...challenge.game,
-        categories: challenge.game.categories.map(
-          ({ category }) => category.name,
-        ),
+        categories: challenge.game.categories.map(({ category }) => category.name),
       },
     };
 
@@ -154,8 +150,7 @@ const controller = {
   async findAllParticipationsWithinOneChallenge(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
 
-    const { page, limit }: PaginationParams =
-      await PaginationOutputSchema.parseAsync(req.query);
+    const { page, limit }: PaginationParams = await PaginationOutputSchema.parseAsync(req.query);
 
     const { skip, take } = getPaginationParams(page, limit);
 
@@ -167,7 +162,7 @@ const controller = {
           },
         },
         select: participationSelectParams,
-        
+
         skip,
         take,
       }),
@@ -261,10 +256,48 @@ const controller = {
   },
 
   // POST /challenges/:slug/participations
-  async createOneParticipationWithinOneChallenge(
-    req: Request,
-    res: Response,
-  ) {},
+  /*
+    video          String              @db.VarChar(255)
+    title          String              @db.VarChar(200)
+    description    String?             @db.Text
+    challengeId    Int                 @map("challenge_id")
+    userId         Int                 @map("user_id")
+  */
+  async createOneParticipationWithinOneChallenge(req: Request, res: Response) {
+    const slug = await parseSlugFromParams(req.params.slug as string);
+
+    const { title, description, video } =
+      await createOneParticipationWithinOneChallengeBodySchema.parseAsync(req.body);
+
+    const { username } = await prisma.user.findUniqueOrThrow({
+      where: {
+        id: req.user.id,
+      },
+    });
+
+    await prisma.participation.create({
+      data: {
+        user: {
+          connect: {
+            id: req.user.id,
+          },
+        },
+        challenge: {
+          connect: {
+            slug,
+          },
+        },
+        title,
+        slug: generateSlug(title, username),
+        description,
+        video,
+      },
+    });
+
+    res.status(201).send({
+      message: "Challenge successfully created.",
+    });
+  },
 
   // PATCH /challenges/:slug
   async updateOne(req: Request, res: Response) {
@@ -294,7 +327,6 @@ const controller = {
     });
   },
 
-  
   // DELETE /challenges/:slug
   async deleteOne(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
@@ -307,7 +339,6 @@ const controller = {
 
     res.status(204).end();
   },
-
 };
 
 export default controller;
