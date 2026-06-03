@@ -7,7 +7,11 @@ import {
   type PaginationParams,
   type QueryChallengeParams,
 } from "../schemas/query.schemas";
-import { generateSlug, parseSlugFromParams } from "../utils/controller.utils";
+import {
+  challengeSelectParams,
+  generateSlug,
+  parseSlugFromParams,
+} from "../utils/controller.utils";
 import { NotFoundError } from "../lib/errors";
 import {
   createOneChallengeBodySchema,
