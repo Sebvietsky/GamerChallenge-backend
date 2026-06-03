@@ -295,7 +295,7 @@ const controller = {
     });
 
     res.status(201).send({
-      message: "Challenge successfully created.",
+      message: "Participation successfully created.",
     });
   },
 
