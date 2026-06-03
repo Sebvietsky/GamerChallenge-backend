@@ -1,11 +1,13 @@
 import { prisma } from "../lib/prisma";
 import type { Request, Response } from "express";
-import { PaginationOutputSchema } from "../schemas/query.schemas";
+import { PaginationOutputSchema, type PaginationLeaderboardParams } from "../schemas/query.schemas";
 import { getPaginationParams } from "../utils/pagination.utils";
 
 const controller = {
   async mostPlayedChallenges(req: Request, res: Response) {
-    const { page, limit } = await PaginationOutputSchema.parseAsync(req.query);
+    const { page, limit }: PaginationLeaderboardParams = await PaginationOutputSchema.parseAsync(
+      req.query
+    );
 
     const { skip, take } = getPaginationParams(page, limit);
     const challenges = await prisma.challenge.findMany({
@@ -18,7 +20,9 @@ const controller = {
   },
 
   async mostActifUsers(req: Request, res: Response) {
-    const { page, limit } = await PaginationOutputSchema.parseAsync(req.query);
+    const { page, limit }: PaginationLeaderboardParams = await PaginationOutputSchema.parseAsync(
+      req.query
+    );
 
     const { skip, take } = getPaginationParams(page, limit);
 
