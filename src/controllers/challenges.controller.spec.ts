@@ -43,7 +43,7 @@ describe("Challenges Controller", () => {
     const loginRes = await request(app)
       .post("/api/auth/login")
       .send({ email: "test@example.com", password: VALID_PASSWORD });
-    
+
     const rawCookies = loginRes.headers["set-cookie"];
     const cookies: string[] = Array.isArray(rawCookies)
       ? rawCookies
@@ -83,6 +83,7 @@ describe("Challenges Controller", () => {
 
   afterEach(async () => {
     // Clean up
+    await prisma.participation.deleteMany();
     await prisma.challenge.deleteMany();
     await prisma.refreshToken.deleteMany();
     await prisma.user.deleteMany();
@@ -133,6 +134,8 @@ describe("Challenges Controller", () => {
 
       expect(response.status).toBe(200);
       expect(response.body.title).toBe("Find Me");
+      expect(response.body).toHaveProperty("game");
+      expect(Array.isArray(response.body.game.categories)).toBe(true);
     });
 
     test("should return 404 if not found", async () => {
@@ -143,37 +146,33 @@ describe("Challenges Controller", () => {
 
   describe("POST /api/challenges", () => {
     test("should return 201 if created successfully", async () => {
-      const response = await request(app)
-        .post("/api/challenges")
-        .set("Cookie", accessToken)
-        .send({
-          title: "New Challenge",
-          description: "A great description",
-          igdbId: 12345,
-          challengeCategoryId: categoryId,
-          difficultyId: difficultyId,
-        });
+      const response = await request(app).post("/api/challenges").set("Cookie", accessToken).send({
+        title: "New Challenge",
+        description: "A great description",
+        igdbId: 12345,
+        challengeCategoryId: categoryId,
+        difficultyId: difficultyId,
+      });
 
       expect(response.status).toBe(201);
       expect(response.body.message).toBe("Challenge successfully created.");
 
       const dbChallenge = await prisma.challenge.findFirst({ where: { title: "New Challenge" } });
       expect(dbChallenge).not.toBeNull();
+      expect(dbChallenge?.slug).toBe("new-challengetestuser");
     });
 
     test("should return 401 if not authenticated", async () => {
-        const response = await request(app)
-          .post("/api/challenges")
-          .send({
-            title: "Unauth Challenge",
-            description: "No token",
-            igdbId: 12345,
-            challengeCategoryId: categoryId,
-            difficultyId: difficultyId,
-          });
-  
-        expect(response.status).toBe(401);
+      const response = await request(app).post("/api/challenges").send({
+        title: "Unauth Challenge",
+        description: "No token",
+        igdbId: 12345,
+        challengeCategoryId: categoryId,
+        difficultyId: difficultyId,
       });
+
+      expect(response.status).toBe(401);
+    });
   });
 
   describe("PATCH /api/challenges/:slug", () => {
@@ -222,6 +221,84 @@ describe("Challenges Controller", () => {
       expect(response.status).toBe(204);
       const dbChallenge = await prisma.challenge.findFirst({ where: { slug: "to-delete" } });
       expect(dbChallenge).toBeNull();
+    });
+  });
+
+  describe("GET /api/challenges/:slug/participations", () => {
+    test("should return 200 and a list of participations", async () => {
+      const challenge = await prisma.challenge.create({
+        data: {
+          title: "Participate Here",
+          slug: "participate-here",
+          description: "Description",
+          userId,
+          gameId,
+          challengeCategoryId: categoryId,
+          difficultyId,
+        },
+      });
+
+      await prisma.participation.create({
+        data: {
+          title: "My Participation",
+          slug: "my-participation-testuser",
+          description: "I did it!",
+          video: "https://youtube.com/watch?v=123",
+          userId,
+          challengeId: challenge.id,
+        },
+      });
+
+      const response = await request(app).get("/api/challenges/participate-here/participations");
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty("data");
+      expect(Array.isArray(response.body.data)).toBe(true);
+      expect(response.body.data.length).toBe(1);
+      expect(response.body.data[0].title).toBe("My Participation");
+    });
+  });
+
+  describe("POST /api/challenges/:slug/participations", () => {
+    test("should return 201 if participation created successfully", async () => {
+      await prisma.challenge.create({
+        data: {
+          title: "Challenge to Join",
+          slug: "challenge-to-join",
+          description: "Description",
+          userId,
+          gameId,
+          challengeCategoryId: categoryId,
+          difficultyId,
+        },
+      });
+
+      const response = await request(app)
+        .post("/api/challenges/challenge-to-join/participations")
+        .set("Cookie", accessToken)
+        .send({
+          title: "Joining Now",
+          description: "Ready to go",
+          video: "https://twitch.tv/video/123",
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body.message).toBe("Participation successfully created.");
+
+      const dbParticipation = await prisma.participation.findFirst({
+        where: { title: "Joining Now" },
+      });
+      expect(dbParticipation).not.toBeNull();
+    });
+
+    test("should return 401 if not authenticated", async () => {
+      const response = await request(app).post("/api/challenges/some-slug/participations").send({
+        title: "Unauth Join",
+        description: "No token",
+        video: "https://video.com",
+      });
+
+      expect(response.status).toBe(401);
     });
   });
 });

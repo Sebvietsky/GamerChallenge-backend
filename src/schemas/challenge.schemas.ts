@@ -37,6 +37,10 @@ export const updateOneChallengeBodySchema = z.object({
   difficultyId: z.coerce.number().int().min(1).optional(),
 });
 
-export type updateOneChallengeParams = z.input<
-  typeof updateOneChallengeBodySchema
->;
+export type updateOneChallengeParams = z.input<typeof updateOneChallengeBodySchema>;
+
+export const createOneParticipationWithinOneChallengeBodySchema = z.object({
+  title: z.string().min(2),
+  description: z.string().min(2),
+  video: z.string().min(2),
+});

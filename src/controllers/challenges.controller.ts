@@ -9,66 +9,20 @@ import {
   type PaginationParams,
   type QueryChallengeParams,
 } from "../schemas/query.schemas";
-import { generateSlug, parseSlugFromParams } from "../utils/controller.utils";
+import {
+  generateSlug,
+  parseSlugFromParams,
+  challengeSelectParams,
+  participationSelectParams,
+} from "../utils/controller.utils";
 import { NotFoundError } from "../lib/errors";
 import {
   createOneChallengeBodySchema,
+  createOneParticipationWithinOneChallengeBodySchema,
   updateOneChallengeBodySchema,
   type updateOneChallengeParams,
 } from "../schemas/challenge.schemas";
 import { findOrCreateGameFromIGDB } from "../utils/game.utils";
-
-const challengeSelectParams = {
-  id: true,
-  title: true,
-  slug: true,
-  closesAt: true,
-  status: true,
-  createdAt: true,
-  game: {
-    select: {
-      name: true,
-      studio: true,
-      platform: true,
-      coverUrl: true,
-      categories: {
-        select: {
-          category: {
-            select: {
-              name: true,
-            },
-          },
-        },
-      },
-    },
-  },
-  challengeCategory: {
-    select: {
-      name: true,
-      colorCode: true,
-    },
-  },
-  difficulty: {
-    select: {
-      name: true,
-      colorCode: true,
-    },
-  },
-  user: {
-    select: {
-      username: true,
-      country: true,
-      profilePicture: true,
-    },
-  },
-  _count: {
-    select: {
-      participations: true,
-      favoritedBy: true,
-      votes: true,
-    },
-  },
-};
 
 const controller = {
   // GET /home?sortBy=Like&Since=""
@@ -151,7 +105,9 @@ const controller = {
       ...(category && { challengeCategory: { name: category } }),
       ...(game && { game: { name: { contains: game, mode: "insensitive" } } }),
       ...(difficulty && { difficulty: { name: difficulty } }),
-      ...(creator && { user: { username: { contains: creator, mode: "insensitive" } } }),
+      ...(creator && {
+        user: { username: { contains: creator, mode: "insensitive" } },
+      }),
       ...(status && { status }),
 
       /*
@@ -233,7 +189,7 @@ const controller = {
   async findOne(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
 
-    const challenge = await prisma.challenge.findFirst({
+    const challenge = await prisma.challenge.findUniqueOrThrow({
       where: {
         slug,
       },
@@ -251,6 +207,45 @@ const controller = {
     };
 
     res.status(200).send(response);
+  },
+
+  // GET /challenges/:slug/participations
+  async findAllParticipationsWithinOneChallenge(req: Request, res: Response) {
+    const slug = await parseSlugFromParams(req.params.slug as string);
+
+    const { page, limit }: PaginationParams = await PaginationOutputSchema.parseAsync(req.query);
+
+    const { skip, take } = getPaginationParams(page, limit);
+
+    const [participations, total] = await Promise.all([
+      prisma.participation.findMany({
+        where: {
+          challenge: {
+            slug,
+          },
+        },
+        select: participationSelectParams,
+
+        skip,
+        take,
+      }),
+
+      prisma.participation.count({
+        where: {
+          challenge: {
+            slug,
+          },
+        },
+      }),
+    ]);
+
+    res.status(200).json({
+      data: participations,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    });
   },
 
   // POST /challenges
@@ -320,6 +315,50 @@ const controller = {
 
     res.status(201).send({
       message: "Challenge successfully created.",
+    });
+  },
+
+  // POST /challenges/:slug/participations
+  /*
+    video          String              @db.VarChar(255)
+    title          String              @db.VarChar(200)
+    description    String?             @db.Text
+    challengeId    Int                 @map("challenge_id")
+    userId         Int                 @map("user_id")
+  */
+  async createOneParticipationWithinOneChallenge(req: Request, res: Response) {
+    const slug = await parseSlugFromParams(req.params.slug as string);
+
+    const { title, description, video } =
+      await createOneParticipationWithinOneChallengeBodySchema.parseAsync(req.body);
+
+    const { username } = await prisma.user.findUniqueOrThrow({
+      where: {
+        id: req.user.id,
+      },
+    });
+
+    await prisma.participation.create({
+      data: {
+        user: {
+          connect: {
+            id: req.user.id,
+          },
+        },
+        challenge: {
+          connect: {
+            slug,
+          },
+        },
+        title,
+        slug: generateSlug(title, username),
+        description,
+        video,
+      },
+    });
+
+    res.status(201).send({
+      message: "Participation successfully created.",
     });
   },
 
