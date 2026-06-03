@@ -1,27 +1,14 @@
 import { faker } from "@faker-js/faker";
 import { hash } from "argon2";
 import { prisma } from "../lib/prisma.js";
+import { findOrCreateGameFromIGDB } from "../utils/game.utils.js";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const USERS_COUNT = 20;
-const GAMES_COUNT = 10;
 const CHALLENGES_PER_GAME = 5;
 
 // ─── Reference data ───────────────────────────────────────────────────────────
-
-const GAME_CATEGORIES = [
-  "FPS",
-  "RPG",
-  "MMORPG",
-  "Battle Royale",
-  "Simulation",
-  "Sport",
-  "Plateforme",
-  "Stratégie",
-  "Horreur",
-  "Combat",
-];
 
 const CHALLENGE_CATEGORIES = [
   { name: "Speedrun", colorCode: "#FF4500" },
@@ -43,26 +30,16 @@ const DIFFICULTIES = [
 ];
 
 const GAMES = [
-  { igdbId: 119133, name: "Elden Ring", studio: "FromSoftware", platform: "PC / PS5 / Xbox" },
-  { igdbId: 11133, name: "Dark Souls III", studio: "FromSoftware", platform: "PC / PS4 / Xbox" },
-  {
-    igdbId: 7346,
-    name: "The Legend of Zelda: Breath of the Wild",
-    studio: "Nintendo",
-    platform: "Switch",
-  },
-  {
-    igdbId: 101606,
-    name: "Sekiro: Shadows Die Twice",
-    studio: "FromSoftware",
-    platform: "PC / PS4 / Xbox",
-  },
-  { igdbId: 36083, name: "Hollow Knight", studio: "Team Cherry", platform: "PC / Switch / PS4" },
-  { igdbId: 45691, name: "Celeste", studio: "Maddy Makes Games", platform: "PC / Switch / PS4" },
-  { igdbId: 121, name: "Minecraft", studio: "Mojang", platform: "PC / Console / Mobile" },
-  { igdbId: 1905, name: "Fortnite", studio: "Epic Games", platform: "PC / Console / Mobile" },
-  { igdbId: 115, name: "League of Legends", studio: "Riot Games", platform: "PC" },
-  { igdbId: 126459, name: "Valorant", studio: "Riot Games", platform: "PC" },
+  { igdbId: 119133 },
+  { igdbId: 11133 },
+  { igdbId: 7346 },
+  { igdbId: 101606 },
+  { igdbId: 36083 },
+  { igdbId: 45691 },
+  { igdbId: 121 },
+  { igdbId: 1905 },
+  { igdbId: 115 },
+  { igdbId: 126459 },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -89,7 +66,6 @@ function uniqueSlug(base: string, existing: Set<string>): string {
   return candidate;
 }
 
-// Distribue les statuts selon une pondération
 function weightedPick<T>(weighted: { value: T; weight: number }[]): T {
   const total = weighted.reduce((sum, w) => sum + w.weight, 0);
   let rand = Math.random() * total;
@@ -105,7 +81,6 @@ function weightedPick<T>(weighted: { value: T; weight: number }[]): T {
 async function main() {
   console.log("🌱 Démarrage du seeding...\n");
 
-  // Nettoyage dans l'ordre des dépendances
   await prisma.participationVote.deleteMany();
   await prisma.challengeVote.deleteMany();
   await prisma.userFavoriteChallenge.deleteMany();
@@ -120,53 +95,30 @@ async function main() {
   await prisma.gameCategory.deleteMany();
   console.log("🧹 Base de données nettoyée");
 
-  // ── Catégories de jeux ──────────────────────────────────────────────────────
-  const gameCategories = await Promise.all(
-    GAME_CATEGORIES.map((name) => prisma.gameCategory.create({ data: { name } }))
-  );
-  console.log(`✅ ${gameCategories.length} catégories de jeux créées`);
-
-  // ── Catégories de challenges ─────────────────────────────────────────────────
+  // ── Catégories de challenges ──────────────────────────────────────────────────
   const challengeCategories = await Promise.all(
     CHALLENGE_CATEGORIES.map((c) => prisma.challengeCategory.create({ data: c }))
   );
   console.log(`✅ ${challengeCategories.length} catégories de challenges créées`);
 
-  // ── Difficultés ──────────────────────────────────────────────────────────────
+  // ── Difficultés ───────────────────────────────────────────────────────────────
   const difficulties = await Promise.all(
     DIFFICULTIES.map((d) => prisma.difficulty.create({ data: d }))
   );
   console.log(`✅ ${difficulties.length} niveaux de difficulté créés`);
 
-  // ── Jeux ─────────────────────────────────────────────────────────────────────
-  const games = await Promise.all(
-    GAMES.slice(0, GAMES_COUNT).map((g) =>
-      prisma.game.create({
-        data: {
-          ...g,
-          coverUrl: faker.image.urlPicsumPhotos({ width: 400, height: 600 }),
-          visibility: true,
-        },
-      })
-    )
-  );
-
-  // Associe 1 à 3 catégories par jeu
-  for (const game of games) {
-    const shuffled = faker.helpers.shuffle([...gameCategories]);
-    const picked = shuffled.slice(0, faker.number.int({ min: 1, max: 3 }));
-    for (const cat of picked) {
-      await prisma.gameHasGameCategory.create({
-        data: { gameId: game.id, gameCategoryId: cat.id },
-      });
-    }
+  // ── Jeux (données réelles depuis IGDB) ────────────────────────────────────────
+  // Séquentiel pour éviter les race conditions sur l'upsert des GameCategory
+  const gameIds: number[] = [];
+  for (const g of GAMES) {
+    gameIds.push(await findOrCreateGameFromIGDB(g.igdbId));
   }
-  console.log(`✅ ${games.length} jeux créés avec leurs catégories`);
+  const games = await prisma.game.findMany({ where: { id: { in: gameIds } } });
+  console.log(`✅ ${games.length} jeux créés avec leurs catégories (IGDB)`);
 
-  // ── Utilisateurs ─────────────────────────────────────────────────────────────
+  // ── Utilisateurs ──────────────────────────────────────────────────────────────
   const hashedPassword = await hash("Password123!");
 
-  // Comptes fixes avec des rôles garantis (utiles pour les tests manuels)
   const fixedUsers = await Promise.all([
     prisma.user.create({
       data: {
@@ -174,9 +126,11 @@ async function main() {
         email: "admin@gamerchallenge.dev",
         password: hashedPassword,
         country: "France",
-        bio: "Administrateur de la plateforme.",
+        bio: "Administrateur de la plateforme GamerChallenges.",
+        profilePicture: faker.image.avatar(),
         role: "admin",
         status: "active",
+        visibility: true,
       },
     }),
     prisma.user.create({
@@ -185,46 +139,33 @@ async function main() {
         email: "moderator@gamerchallenge.dev",
         password: hashedPassword,
         country: "France",
-        bio: "Modérateur de la plateforme.",
+        bio: "Modérateur de la plateforme GamerChallenges.",
+        profilePicture: faker.image.avatar(),
         role: "moderator",
         status: "active",
-      },
-    }),
-    prisma.user.create({
-      data: {
-        username: "inactive_user",
-        email: "inactive@gamerchallenge.dev",
-        password: hashedPassword,
-        country: "Belgium",
-        bio: faker.lorem.sentence(),
-        role: "user",
-        status: "inactive",
+        visibility: true,
       },
     }),
   ]);
 
-  // Utilisateurs générés par Faker (tous active)
   const fakerUsers = await Promise.all(
-    Array.from({ length: USERS_COUNT - 3 }).map(() => {
+    Array.from({ length: USERS_COUNT - 2 }).map(() => {
       const username =
         faker.internet
           .username()
           .replace(/[^a-zA-Z0-9_]/g, "")
-          .slice(0, 50) + faker.number.int({ min: 1, max: 999 });
+          .slice(0, 46) + faker.number.int({ min: 1, max: 999 });
       return prisma.user.create({
         data: {
           username: username.slice(0, 50),
           email: faker.internet.email(),
           password: hashedPassword,
           country: faker.location.country().slice(0, 50),
-          bio:
-            faker.helpers.maybe(() => faker.lorem.sentences({ min: 1, max: 3 }), {
-              probability: 0.7,
-            }) ?? null,
-          profilePicture:
-            faker.helpers.maybe(() => faker.image.avatar(), { probability: 0.6 }) ?? null,
+          bio: faker.lorem.sentences({ min: 1, max: 3 }),
+          profilePicture: faker.image.avatar(),
           role: "user",
           status: "active",
+          visibility: true,
         },
       });
     })
@@ -232,45 +173,36 @@ async function main() {
 
   const allUsers = [...fixedUsers, ...fakerUsers];
   console.log(
-    `✅ ${allUsers.length} utilisateurs créés (admin, moderator, inactive + ${fakerUsers.length} users)`
+    `✅ ${allUsers.length} utilisateurs créés (admin, moderator + ${fakerUsers.length} users)`
   );
 
-  // ── Challenges ───────────────────────────────────────────────────────────────
+  // ── Challenges ────────────────────────────────────────────────────────────────
   const challengeSlugs = new Set<string>();
   const challengeStatusWeights = [
-    { value: "active" as const, weight: 60 },
-    { value: "draft" as const, weight: 20 },
-    { value: "closed" as const, weight: 20 },
+    { value: "active" as const, weight: 75 },
+    { value: "draft" as const, weight: 25 },
   ];
 
   const allChallenges = [];
   for (const game of games) {
     for (let i = 0; i < CHALLENGES_PER_GAME; i++) {
-      const title = faker.helpers.fake(
-        "{{word.adjective}} {{word.noun}} Challenge sur " + game.name
-      );
+      const title = faker.helpers
+        .fake("{{word.adjective}} {{word.noun}} Challenge sur " + game.name)
+        .slice(0, 200);
       const status = weightedPick(challengeStatusWeights);
       const challenge = await prisma.challenge.create({
         data: {
           title,
           slug: uniqueSlug(title, challengeSlugs),
-          description: faker.lorem.paragraphs({ min: 1, max: 3 }),
-          hints:
-            faker.helpers.maybe(() => faker.lorem.sentences({ min: 1, max: 2 }), {
-              probability: 0.5,
-            }) ?? null,
-          demo: faker.helpers.maybe(() => faker.internet.url(), { probability: 0.4 }) ?? null,
-          goals:
-            faker.helpers.maybe(() => faker.lorem.sentences({ min: 1, max: 3 }), {
-              probability: 0.6,
-            }) ?? null,
+          description: faker.lorem.paragraphs({ min: 2, max: 4 }),
+          hints: faker.lorem.sentences({ min: 1, max: 2 }),
+          demo: faker.internet.url(),
+          goals: faker.lorem.sentences({ min: 2, max: 4 }),
           closesAt:
             status === "active"
-              ? (faker.helpers.maybe(() => faker.date.future({ years: 1 }), { probability: 0.4 }) ??
+              ? (faker.helpers.maybe(() => faker.date.future({ years: 1 }), { probability: 0.5 }) ??
                 null)
-              : status === "closed"
-                ? faker.date.past({ years: 1 })
-                : null,
+              : null,
           status,
           visibility: true,
           gameId: game.id,
@@ -284,20 +216,14 @@ async function main() {
   }
   console.log(`✅ ${allChallenges.length} challenges créés`);
 
-  // ── Participations (uniquement sur les challenges active) ────────────────────
+  // ── Participations (uniquement sur les challenges active) ─────────────────────
   const activeChallenges = allChallenges.filter((c) => c.status === "active");
   const participationSlugs = new Set<string>();
-  const participationStatusWeights = [
-    { value: "approved" as const, weight: 70 },
-    { value: "pending" as const, weight: 30 },
-  ];
-
-  const allParticipations = [];
-  // Suivi des paires (userId, challengeId) pour respecter la contrainte @@unique
   const participationPairs = new Set<string>();
+  const allParticipations = [];
 
   for (const challenge of activeChallenges) {
-    const participantCount = faker.number.int({ min: 2, max: 6 });
+    const participantCount = faker.number.int({ min: 3, max: 8 });
     const shuffledUsers = faker.helpers.shuffle([...allUsers]);
 
     for (let i = 0; i < Math.min(participantCount, shuffledUsers.length); i++) {
@@ -306,20 +232,17 @@ async function main() {
       if (participationPairs.has(pairKey)) continue;
       participationPairs.add(pairKey);
 
-      const title = faker.helpers.fake(
-        "Ma run sur {{word.noun}} — " + challenge.title.slice(0, 80)
-      );
-      const status = weightedPick(participationStatusWeights);
+      const title = faker.helpers
+        .fake("Ma run sur {{word.noun}} — " + challenge.title.slice(0, 80))
+        .slice(0, 200);
+
       const participation = await prisma.participation.create({
         data: {
-          title: title.slice(0, 200),
+          title,
           slug: uniqueSlug(title, participationSlugs),
-          description:
-            faker.helpers.maybe(() => faker.lorem.paragraphs({ min: 1, max: 2 }), {
-              probability: 0.6,
-            }) ?? null,
+          description: faker.lorem.paragraphs({ min: 1, max: 2 }),
           video: faker.internet.url(),
-          status,
+          status: "approved",
           visibility: true,
           challengeId: challenge.id,
           userId: user.id,
@@ -330,12 +253,12 @@ async function main() {
   }
   console.log(`✅ ${allParticipations.length} participations créées`);
 
-  // ── Votes sur challenges ──────────────────────────────────────────────────────
+  // ── Votes sur challenges ───────────────────────────────────────────────────────
   const challengeVotePairs = new Set<string>();
   let challengeVotesCount = 0;
 
   for (const challenge of activeChallenges) {
-    const voterCount = faker.number.int({ min: 0, max: 8 });
+    const voterCount = faker.number.int({ min: 2, max: 10 });
     const shuffledUsers = faker.helpers.shuffle([...allUsers]).slice(0, voterCount);
     for (const user of shuffledUsers) {
       const key = `${user.id}-${challenge.id}`;
@@ -347,13 +270,12 @@ async function main() {
   }
   console.log(`✅ ${challengeVotesCount} votes sur challenges créés`);
 
-  // ── Votes sur participations (uniquement approved) ───────────────────────────
-  const approvedParticipations = allParticipations.filter((p) => p.status === "approved");
+  // ── Votes sur participations ──────────────────────────────────────────────────
   const participationVotePairs = new Set<string>();
   let participationVotesCount = 0;
 
-  for (const participation of approvedParticipations) {
-    const voterCount = faker.number.int({ min: 0, max: 10 });
+  for (const participation of allParticipations) {
+    const voterCount = faker.number.int({ min: 1, max: 12 });
     const shuffledUsers = faker.helpers.shuffle([...allUsers]).slice(0, voterCount);
     for (const user of shuffledUsers) {
       const key = `${user.id}-${participation.id}`;
@@ -372,7 +294,7 @@ async function main() {
   let favoritesCount = 0;
 
   for (const user of allUsers) {
-    const favoriteCount = faker.number.int({ min: 0, max: 5 });
+    const favoriteCount = faker.number.int({ min: 1, max: 8 });
     const shuffledChallenges = faker.helpers.shuffle([...activeChallenges]).slice(0, favoriteCount);
     for (const challenge of shuffledChallenges) {
       const key = `${user.id}-${challenge.id}`;
@@ -389,9 +311,8 @@ async function main() {
   console.log("\n🎮 Seeding terminé avec succès !");
   console.log("─────────────────────────────────────");
   console.log("Comptes de test :");
-  console.log("  admin@gamerchallenge.dev     → admin       (Password123!)");
-  console.log("  moderator@gamerchallenge.dev → moderator   (Password123!)");
-  console.log("  inactive@gamerchallenge.dev  → inactive    (Password123!)");
+  console.log("  admin@gamerchallenge.dev     → admin      (Password123!)");
+  console.log("  moderator@gamerchallenge.dev → moderator  (Password123!)");
 }
 
 main()
