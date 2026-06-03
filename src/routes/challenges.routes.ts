@@ -14,6 +14,11 @@ router.post(
   checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
   controller.createOne
 );
+router.patch(
+  "/:slug/updateStatus",
+  checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
+  controller.updateChallengeStatusFromDraftToActive
+);
 router.post(
   "/:slug/participations",
   checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
