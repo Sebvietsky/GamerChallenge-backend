@@ -35,6 +35,16 @@ services: # Liste des serveurs
     depends_on:
       database:
         condition: service_healthy
+    networks:
+      - default      # Réseau interne au backend : permet à l'API de joindre la base de données
+      - gamer_network # Réseau partagé avec le frontend : sans cela, définir un réseau explicite retirerait l'API du réseau default et casserait la connexion DB
+
+# La database n'a pas de réseau explicite : elle reste sur default automatiquement
+# Elle n'a pas besoin de gamer_network car le frontend ne doit jamais lui parler directement
 
 volumes: # Liste de nos volumes
   gamer_challenge_volume: # Volume pour la persistance des données de la DB
+
+networks:
+  gamer_network:
+    name: gamer_network # Force le nom exact sans préfixe — le frontend peut le rejoindre en external: true

@@ -6,6 +6,7 @@ import { UserRole } from "../lib/prisma";
 const router: Router = Router();
 
 router.get("/", controller.findAll);
+router.get("/home", controller.findBest);
 router.get("/:slug", controller.findOne);
 router.get("/:slug/participations", controller.findAllParticipationsWithinOneChallenge);
 router.post(

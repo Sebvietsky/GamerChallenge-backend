@@ -40,5 +40,12 @@ export const QueryChallengeOutputSchema = z.object({
   sort: z.enum(["asc", "desc"]).default("asc"),
 });
 
+export const FindBestQuerySchema = z.object({
+  since: z.enum(["1w", "1m", "3m", "6m", "1y"]).optional(),
+  limit: z.coerce.number().int().min(1).max(20).default(5),
+  sortBy: z.enum(["votes", "participations", "createdAt"]).default("votes"),
+});
+
 export type PaginationParams = z.infer<typeof PaginationOutputSchema>;
 export type QueryChallengeParams = z.infer<typeof QueryChallengeOutputSchema>;
+export type FindBestQueryParams = z.infer<typeof FindBestQuerySchema>;
