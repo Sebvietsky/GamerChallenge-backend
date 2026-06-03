@@ -1,16 +1,17 @@
 import { type Request, type Response } from "express";
 import { parseSlugFromParams, participationSelectParams } from "../utils/controller.utils";
-import { prisma } from "../lib/prisma";
+import { Prisma, prisma } from "../lib/prisma";
 import { NotFoundError } from "../lib/errors";
+import { updateOneParticipationWithinOneChallengeBodySchema } from "../schemas/participations.schema";
 
 const controller = {
-  // GET /participations/:slugParticipation
+  // GET /participations/:slug
   async findOneParticipationWithinOneChallenge(req: Request, res: Response) {
-    const slugParticipation = await parseSlugFromParams(req.params.slugParticipation as string);
+    const slug = await parseSlugFromParams(req.params.slug as string);
 
     const participation = await prisma.participation.findUniqueOrThrow({
       where: {
-        slug: slugParticipation,
+        slug,
       },
       select: participationSelectParams,
     });
@@ -31,11 +32,38 @@ const controller = {
     res.status(200).send(response);
   },
 
-  // PATCH /challenges/:slugChallenge/participations/:slugParticipation
-  async updateOneParticipationWithinOneChallenge(req: Request, res: Response) {},
+  // PATCH /participations/:slug
+  async updateOneParticipationWithinOneChallenge(req: Request, res: Response) {
+    const slug = await parseSlugFromParams(req.params.slug as string);
+
+    const body = await updateOneParticipationWithinOneChallengeBodySchema.parseAsync(req.body);
+
+    const data = body as Prisma.ParticipationUncheckedUpdateInput;
+
+    await prisma.participation.update({
+      where: {
+        slug,
+      },
+      data,
+    });
+
+    res.status(200).send({
+      message: "Participation successfully updated.",
+    });
+  },
 
   // DELETE /challenges/:slugChallenge/participations/:slugParticipation
-  async deleteOneParticipationWithinOneChallenge(req: Request, res: Response) {},
+  async deleteOneParticipationWithinOneChallenge(req: Request, res: Response) {
+    const slug = await parseSlugFromParams(req.params.slug as string);
+
+    await prisma.challenge.delete({
+      where: {
+        slug,
+      },
+    });
+
+    res.status(204).end();
+  },
 };
 
 export default controller;

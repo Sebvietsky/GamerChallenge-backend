@@ -1,0 +1,20 @@
+import { Router } from "express";
+import { checkRoles } from "../middlewares/access-control.middleware";
+import { UserRole } from "../lib/prisma";
+import controller from "../controllers/participations.controller";
+
+const router: Router = Router();
+
+router.get("/:slug", controller.findOneParticipationWithinOneChallenge);
+router.patch(
+  "/:slug",
+  checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
+  controller.updateOneParticipationWithinOneChallenge
+);
+router.delete(
+  "/:slug",
+  checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
+  controller.deleteOneParticipationWithinOneChallenge
+);
+
+export default router;
