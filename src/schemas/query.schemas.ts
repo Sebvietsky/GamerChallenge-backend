@@ -32,6 +32,7 @@ export const QueryChallengeOutputSchema = z.object({
   difficulty: z.enum(["Facile", "Moyen", "Difficile", "Expert", "Légendaire"]).optional(),
   creator: z.string().trim().min(1).optional(),
   status: z.enum(["active", "closed"]).optional(),
+  since: z.enum(["1w", "1m", "3m", "6m", "1y"]).optional(),
   closesAfter: z.coerce.date().optional(),
   closesBefore: z.coerce.date().optional(),
   orderBy: z
