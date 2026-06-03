@@ -1,5 +1,9 @@
 import { type Request, type Response } from "express";
-import { parseSlugFromParams, participationSelectParams } from "../utils/controller.utils";
+import {
+  challengeSelectParams,
+  parseSlugFromParams,
+  participationSelectParams,
+} from "../utils/controller.utils";
 import { Prisma, prisma } from "../lib/prisma";
 import { NotFoundError } from "../lib/errors";
 import { updateOneParticipationWithinOneChallengeBodySchema } from "../schemas/participations.schema";
@@ -13,7 +17,7 @@ const controller = {
       where: {
         slug,
       },
-      select: participationSelectParams,
+      select: { ...participationSelectParams, challenge: { select: challengeSelectParams } },
     });
 
     if (!participation) throw new NotFoundError("Challenge not found.");
