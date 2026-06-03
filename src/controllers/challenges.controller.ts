@@ -16,58 +16,6 @@ import {
 } from "../schemas/challenge.schemas";
 import { findOrCreateGameFromIGDB } from "../utils/game.utils";
 
-const challengeSelectParams = {
-  id: true,
-  title: true,
-  slug: true,
-  closesAt: true,
-  status: true,
-  createdAt: true,
-  game: {
-    select: {
-      name: true,
-      studio: true,
-      platform: true,
-      coverUrl: true,
-      categories: {
-        select: {
-          category: {
-            select: {
-              name: true,
-            },
-          },
-        },
-      },
-    },
-  },
-  challengeCategory: {
-    select: {
-      name: true,
-      colorCode: true,
-    },
-  },
-  difficulty: {
-    select: {
-      name: true,
-      colorCode: true,
-    },
-  },
-  user: {
-    select: {
-      username: true,
-      country: true,
-      profilePicture: true,
-    },
-  },
-  _count: {
-    select: {
-      participations: true,
-      favoritedBy: true,
-      votes: true,
-    },
-  },
-};
-
 const controller = {
   // GET /challenges
   async findAll(req: Request, res: Response): Promise<void> {
@@ -183,9 +131,7 @@ const controller = {
       ...challenge,
       game: {
         ...challenge.game,
-        categories: challenge.game.categories.map(
-          ({ category }) => category.name,
-        ),
+        categories: challenge.game.categories.map(({ category }) => category.name),
       },
     };
 
