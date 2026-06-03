@@ -20,9 +20,7 @@ import {
   createOneChallengeBodySchema,
   createOneParticipationWithinOneChallengeBodySchema,
   updateOneChallengeBodySchema,
-  updateChallengeStatusToActiveSchema,
   type updateOneChallengeParams,
-  type updateChallengeStatusToActive,
 } from "../schemas/challenge.schemas";
 import { findOrCreateGameFromIGDB } from "../utils/game.utils";
 
@@ -393,23 +391,6 @@ const controller = {
         slug,
       },
       data,
-    });
-
-    res.status(200).send({
-      message: "Challenge successfully updated.",
-    });
-  },
-  async updateChallengeStatusFromDraftToActive(req: Request, res: Response) {
-    const slug = await parseSlugFromParams(req.params.slug as string);
-
-    const { status }: updateChallengeStatusToActive =
-      await updateChallengeStatusToActiveSchema.parseAsync(req.body);
-
-    await prisma.challenge.update({
-      where: {
-        slug,
-      },
-      data: { status },
     });
 
     res.status(200).send({

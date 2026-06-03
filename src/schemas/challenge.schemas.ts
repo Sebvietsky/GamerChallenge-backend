@@ -36,6 +36,7 @@ export const updateOneChallengeBodySchema = z.object({
   igdbId: z.coerce.number().int().min(1).optional(),
   challengeCategoryId: z.coerce.number().int().min(1).optional(),
   difficultyId: z.coerce.number().int().min(1).optional(),
+  status: z.enum(["active", "draft"]).optional(),
 });
 
 export type updateOneChallengeParams = z.input<typeof updateOneChallengeBodySchema>;
@@ -45,8 +46,3 @@ export const createOneParticipationWithinOneChallengeBodySchema = z.object({
   description: z.string().min(2),
   video: z.string().min(2),
 });
-export const updateChallengeStatusToActiveSchema = z.object({
-  status: z.enum(["active"]),
-});
-
-export type updateChallengeStatusToActive = z.infer<typeof updateChallengeStatusToActiveSchema>;
