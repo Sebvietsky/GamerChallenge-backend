@@ -20,9 +20,19 @@ import {
   createOneChallengeBodySchema,
   createOneParticipationWithinOneChallengeBodySchema,
   updateOneChallengeBodySchema,
+  updateChallengeStatusToActiveSchema,
   type updateOneChallengeParams,
+  type updateChallengeStatusToActive,
 } from "../schemas/challenge.schemas";
 import { findOrCreateGameFromIGDB } from "../utils/game.utils";
+
+const SINCE_DAYS: Record<NonNullable<FindBestQueryParams["since"]>, number> = {
+  "1w": 7,
+  "1m": 30,
+  "3m": 90,
+  "6m": 180,
+  "1y": 365,
+};
 
 const controller = {
   // GET /home?sortBy=Like&Since=""
@@ -35,14 +45,6 @@ const controller = {
       Convertit le paramètre `since` en date de début de période.
       Sans `since`, sinceDate reste undefined et aucun filtre de date n'est appliqué (all time).
     */
-
-    const SINCE_DAYS: Record<NonNullable<FindBestQueryParams["since"]>, number> = {
-      "1w": 7,
-      "1m": 30,
-      "3m": 90,
-      "6m": 180,
-      "1y": 365,
-    };
 
     const sinceDate = since
       ? new Date(Date.now() - SINCE_DAYS[since] * 24 * 60 * 60 * 1000)
@@ -94,14 +96,20 @@ const controller = {
       difficulty,
       creator,
       status,
+      since,
       closesAfter,
       closesBefore,
       orderBy,
       sort,
     }: QueryChallengeParams = await QueryChallengeOutputSchema.parseAsync(req.query);
 
+    const sinceDate = since
+      ? new Date(Date.now() - SINCE_DAYS[since] * 24 * 60 * 60 * 1000)
+      : undefined;
+
     const where: Prisma.ChallengeWhereInput = {
       ...(search && { title: { contains: search, mode: "insensitive" } }),
+      ...(sinceDate && { createdAt: { gte: sinceDate } }),
       ...(category && { challengeCategory: { name: category } }),
       ...(game && { game: { name: { contains: game, mode: "insensitive" } } }),
       ...(difficulty && { difficulty: { name: difficulty } }),
@@ -271,6 +279,7 @@ const controller = {
       igdbId,
       challengeCategoryId,
       difficultyId,
+      status,
     } = await createOneChallengeBodySchema.parseAsync(req.body);
 
     const { username } = await prisma.user.findUniqueOrThrow({
@@ -295,6 +304,7 @@ const controller = {
         demo: demo ?? null,
         goals: goals ?? null,
         closesAt: closesAt ?? null,
+        status,
         game: {
           connect: {
             id: gameId,
@@ -383,6 +393,23 @@ const controller = {
         slug,
       },
       data,
+    });
+
+    res.status(200).send({
+      message: "Challenge successfully updated.",
+    });
+  },
+  async updateChallengeStatusFromDraftToActive(req: Request, res: Response) {
+    const slug = await parseSlugFromParams(req.params.slug as string);
+
+    const { status }: updateChallengeStatusToActive =
+      await updateChallengeStatusToActiveSchema.parseAsync(req.body);
+
+    await prisma.challenge.update({
+      where: {
+        slug,
+      },
+      data: { status },
     });
 
     res.status(200).send({
