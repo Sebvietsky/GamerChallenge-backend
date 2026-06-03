@@ -130,6 +130,26 @@ export const challengeSelectParams = {
   },
 };
 
+export const leaderboardParticipationSelectParams = {
+  title: true,
+  slug: true,
+  video: true,
+  user: { select: { id: true, username: true, profilePicture: true } },
+  challenge: {
+    select: {
+      title: true,
+      slug: true,
+      game: {
+        select: {
+          name: true,
+          coverUrl: true,
+        },
+      },
+    },
+  },
+  _count: { select: { votes: true } },
+};
+
 export const participationSelectParams = {
   video: true,
   title: true,

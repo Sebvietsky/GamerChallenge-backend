@@ -13,6 +13,7 @@ import {
   setRefreshTokenCookie,
 } from "../lib/tokens";
 import { UnauthorizedError } from "../lib/errors";
+import type { SafeUserResponse } from "../lib/interface";
 
 /**
  * Authentication controller handling user-related actions
@@ -124,9 +125,21 @@ const controller = {
   async getConnectedUser(req: Request, res: Response): Promise<void> {
     const user = await prisma.user.findUniqueOrThrow({ where: { id: req.user.id } });
 
-    const { password: _password, ...userWithoutPassword } = user;
-
-    res.status(200).json(userWithoutPassword);
+    res.status(200).json({
+      userWithoutPassword: {
+        username: user.username,
+        email: user.email,
+        country: user.country,
+        bio: user.bio,
+        profilePicture: user.profilePicture,
+        role: user.role,
+        visibility: user.visibility,
+        status: user.status,
+        createdAt: user.createdAt,
+        updatedAt: user.createdAt,
+        id: user.id,
+      } satisfies SafeUserResponse,
+    });
   },
 };
 
