@@ -69,7 +69,7 @@ model User {
   favoriteChallenges UserFavoriteChallenge[]
   challengeVotes     ChallengeVote[]
   participationVotes ParticipationVote[]
-  refreshTokens RefreshToken[]
+  refreshTokens      RefreshToken[]
 
   @@map("users")
 }
@@ -177,7 +177,7 @@ model Participation {
   title          String              @db.VarChar(200)
   slug           String?             @unique @db.VarChar(250)
   description    String?             @db.Text
-  status         ParticipationStatus @default(pending)
+  status         ParticipationStatus @default(approved)
   rejectedReason String?             @map("rejected_reason") @db.Text
   visibility     Boolean             @default(true)
   challengeId    Int                 @map("challenge_id")
@@ -235,7 +235,7 @@ model RefreshToken {
   id        Int      @id @default(autoincrement())
   token     String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    Int      @map("user_id") @unique
+  userId    Int      @unique @map("user_id")
   issuedAt  DateTime @default(now()) @map("issued_at") @db.Timestamptz
   expiresAt DateTime @map("expires_at") @db.Timestamptz
 
