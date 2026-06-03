@@ -7,20 +7,26 @@ const router: Router = Router();
 
 router.get("/", controller.findAll);
 router.get("/:slug", controller.findOne);
+router.get("/:slug/participations", controller.findOne);
 router.post(
   "/",
   checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
-  controller.createOne,
+  controller.createOne
+);
+router.post(
+  "/:slug/participations",
+  checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
+  controller.createOne
 );
 router.patch(
   "/:slug",
   checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
-  controller.updateOne,
+  controller.updateOne
 );
 router.delete(
   "/:slug",
   checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
-  controller.deleteOne,
+  controller.deleteOne
 );
 
 export default router;
