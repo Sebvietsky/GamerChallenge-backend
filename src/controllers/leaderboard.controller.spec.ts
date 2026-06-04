@@ -229,6 +229,15 @@ describe("Leaderboard Controller", () => {
       expect(res.body.totalPages).toBe(3);
     });
 
+    test("should return empty data when no challenges exist", async () => {
+      const res = await request(app).get("/api/leaderboard/bestChallenges");
+
+      expect(res.status).toBe(200);
+      expect(res.body.data).toEqual([]);
+      expect(res.body.total).toBe(0);
+      expect(res.body.totalPages).toBe(0);
+    });
+
     test("should return correct shape per challenge item", async () => {
       await prisma.challenge.create({
         data: {
@@ -431,6 +440,98 @@ describe("Leaderboard Controller", () => {
       expect(item._count).toHaveProperty("votes");
     });
 
+    test("should include participations with 0 votes when no since filter", async () => {
+      const challenge = await prisma.challenge.create({
+        data: {
+          title: "No Vote Challenge",
+          slug: "no-vote-challenge",
+          description: "desc",
+          userId,
+          gameId,
+          challengeCategoryId: categoryId,
+          difficultyId,
+        },
+      });
+
+      await prisma.participation.create({
+        data: {
+          title: "Zero Votes Part",
+          slug: "zero-votes-testuser",
+          description: "d",
+          video: "https://youtube.com/watch?v=1",
+          userId,
+          challengeId: challenge.id,
+        },
+      });
+
+      const res = await request(app).get("/api/leaderboard/bestParticipations");
+
+      expect(res.status).toBe(200);
+      const titles = res.body.data.map((p: { title: string }) => p.title);
+      expect(titles).toContain("Zero Votes Part");
+    });
+
+    test("should exclude participation with only old votes when since is set", async () => {
+      const user2 = await prisma.user.create({
+        data: {
+          username: "voter2",
+          email: "voter2@example.com",
+          password: await argon2.hash(VALID_PASSWORD),
+          role: UserRole.user,
+        },
+      });
+
+      const challenge = await prisma.challenge.create({
+        data: {
+          title: "Old Votes Challenge",
+          slug: "old-votes-challenge",
+          description: "desc",
+          userId,
+          gameId,
+          challengeCategoryId: categoryId,
+          difficultyId,
+        },
+      });
+
+      const oldPart = await prisma.participation.create({
+        data: {
+          title: "Old Votes Part",
+          slug: "old-votes-testuser",
+          description: "d",
+          video: "https://youtube.com/watch?v=1",
+          userId,
+          challengeId: challenge.id,
+        },
+      });
+
+      const recentPart = await prisma.participation.create({
+        data: {
+          title: "Recent Votes Part",
+          slug: "recent-votes-voter2",
+          description: "d",
+          video: "https://youtube.com/watch?v=2",
+          userId: user2.id,
+          challengeId: challenge.id,
+        },
+      });
+
+      await prisma.participationVote.create({
+        data: { userId, participationId: oldPart.id, createdAt: new Date("2020-01-01") },
+      });
+      await prisma.participationVote.create({
+        data: { userId, participationId: recentPart.id },
+      });
+
+      const res = await request(app)
+        .get("/api/leaderboard/bestParticipations")
+        .query({ since: "1m" });
+
+      expect(res.status).toBe(200);
+      const titles = res.body.data.map((p: { title: string }) => p.title);
+      expect(titles).toContain("Recent Votes Part");
+      expect(titles).not.toContain("Old Votes Part");
+    });
+
     test("should return 400 for invalid since value", async () => {
       const res = await request(app)
         .get("/api/leaderboard/bestParticipations")
@@ -589,6 +690,139 @@ describe("Leaderboard Controller", () => {
       expect(item).toHaveProperty("participationCount");
       expect(item).toHaveProperty("challengeCount");
       expect(item).toHaveProperty("totalActivity");
+    });
+
+    test("should count participationCount and challengeCount separately", async () => {
+      const user2 = await prisma.user.create({
+        data: {
+          username: "owner2",
+          email: "owner2@example.com",
+          password: "hash",
+          role: UserRole.user,
+        },
+      });
+
+      // testuser creates 1 challenge and participates in 2 others
+      const ownChallenge = await prisma.challenge.create({
+        data: {
+          title: "Count Challenge",
+          slug: "count-challenge",
+          description: "d",
+          userId,
+          gameId,
+          challengeCategoryId: categoryId,
+          difficultyId,
+        },
+      });
+
+      const otherChallenge1 = await prisma.challenge.create({
+        data: {
+          title: "Other Challenge 1",
+          slug: "other-challenge-1",
+          description: "d",
+          userId: user2.id,
+          gameId,
+          challengeCategoryId: categoryId,
+          difficultyId,
+        },
+      });
+
+      const otherChallenge2 = await prisma.challenge.create({
+        data: {
+          title: "Other Challenge 2",
+          slug: "other-challenge-2",
+          description: "d",
+          userId: user2.id,
+          gameId,
+          challengeCategoryId: categoryId,
+          difficultyId,
+        },
+      });
+
+      await prisma.participation.createMany({
+        data: [
+          {
+            title: "Part X",
+            slug: "part-x-testuser",
+            description: "d",
+            video: "https://youtube.com/watch?v=1",
+            userId,
+            challengeId: otherChallenge1.id,
+          },
+          {
+            title: "Part Y",
+            slug: "part-y-testuser",
+            description: "d",
+            video: "https://youtube.com/watch?v=2",
+            userId,
+            challengeId: otherChallenge2.id,
+          },
+        ],
+      });
+
+      // suppress unused variable warning
+      void ownChallenge;
+
+      const res = await request(app)
+        .get("/api/leaderboard/bestActivUsers")
+        .query({ page: 1, limit: 10 });
+
+      expect(res.status).toBe(200);
+      const user = res.body.data.find((u: { username: string }) => u.username === "testuser");
+      expect(user.challengeCount).toBe(1);
+      expect(user.participationCount).toBe(2);
+      expect(user.totalActivity).toBe(3);
+    });
+
+    test("should only count recent activity when since is set", async () => {
+      // testuser: 1 old challenge + 1 recent participation
+      await prisma.challenge.create({
+        data: {
+          title: "Old User Challenge",
+          slug: "old-user-challenge",
+          description: "d",
+          userId,
+          gameId,
+          challengeCategoryId: categoryId,
+          difficultyId,
+          createdAt: new Date("2020-01-01"),
+        },
+      });
+
+      const recentChallenge = await prisma.challenge.create({
+        data: {
+          title: "Recent Ref Challenge",
+          slug: "recent-ref-challenge",
+          description: "d",
+          userId,
+          gameId,
+          challengeCategoryId: categoryId,
+          difficultyId,
+        },
+      });
+
+      await prisma.participation.create({
+        data: {
+          title: "Recent Part",
+          slug: "recent-part-testuser",
+          description: "d",
+          video: "https://youtube.com/watch?v=1",
+          userId,
+          challengeId: recentChallenge.id,
+        },
+      });
+
+      const res = await request(app)
+        .get("/api/leaderboard/bestActivUsers")
+        .query({ since: "1m", page: 1, limit: 10 });
+
+      expect(res.status).toBe(200);
+      const user = res.body.data.find((u: { username: string }) => u.username === "testuser");
+      expect(user).toBeDefined();
+      // old challenge is excluded from the count
+      expect(user.challengeCount).toBe(1);
+      expect(user.participationCount).toBe(1);
+      expect(user.totalActivity).toBe(2);
     });
 
     test("should filter activity by since param", async () => {

@@ -685,12 +685,13 @@ describe("[GET] /auth/me", () => {
 
     const response = await request(app).get("/api/auth/me").set("Cookie", accessCookie);
 
+    const user = response.body.userWithoutPassword;
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty("id");
-    expect(response.body.username).toBe("carl");
-    expect(response.body.email).toBe(USER_EMAIL);
-    expect(response.body.country).toBe("USA");
-    expect(response.body.bio).toBe("Un aventurier.");
+    expect(user).toHaveProperty("id");
+    expect(user.username).toBe("carl");
+    expect(user.email).toBe(USER_EMAIL);
+    expect(user.country).toBe("USA");
+    expect(user.bio).toBe("Un aventurier.");
   });
 
   test("should not expose the password", async () => {
@@ -698,7 +699,7 @@ describe("[GET] /auth/me", () => {
 
     const response = await request(app).get("/api/auth/me").set("Cookie", accessCookie);
 
-    expect(response.body.password).toBeUndefined();
+    expect(response.body.userWithoutPassword.password).toBeUndefined();
   });
 
   test("should return 401 if not authenticated", async () => {
