@@ -81,6 +81,7 @@ model Game {
   studio     String?  @db.VarChar(150)
   platform   String?  @db.VarChar(100)
   coverUrl   String?  @map("cover_url") @db.VarChar(255)
+  bannerUrl  String?  @map("banner_url") @db.VarChar(255)
   visibility Boolean  @default(true)
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz()
