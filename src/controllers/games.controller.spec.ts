@@ -10,6 +10,7 @@ vi.mock("../utils/igdb.utils", () => ({
   queryIGDB: vi.fn(),
   buildCoverUrl: (url: string, size = "cover_big") =>
     `https:${url.replace("t_thumb", `t_${size}`)}`,
+  buildImageUrl: (url: string, size = "t_1080p") => `https:${url.replace("t_thumb", size)}`,
 }));
 
 // Import après vi.mock pour récupérer la version mockée
@@ -109,6 +110,17 @@ describe("[GET] /games", () => {
     expect(gameA).toBeDefined();
     expect(gameA.igdbId).toBe(GAME_A.igdbId);
   });
+
+  test("should not return games with visibility: false", async () => {
+    await prisma.game.create({ data: { igdbId: 99003, name: "Hidden Game", visibility: false } });
+
+    const response = await request(app).get("/api/games");
+
+    const names = response.body.data.map((g: { name: string }) => g.name);
+    expect(names).not.toContain("Hidden Game");
+
+    await prisma.game.deleteMany({ where: { igdbId: 99003 } });
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -152,6 +164,46 @@ describe("[GET] /games/search", () => {
     expect(first.studio).toBeNull();
     expect(first.platform).toBeNull();
     expect(first.coverUrl).toBeNull();
+  });
+
+  test("should include bannerUrl from artworks when available", async () => {
+    mockQueryIGDB.mockResolvedValue([
+      {
+        id: 2,
+        name: "Banner Game",
+        artworks: [{ url: "//images.igdb.com/igdb/image/upload/t_thumb/art001.jpg" }],
+      },
+    ]);
+
+    const response = await request(app).get("/api/games/search?q=Banner");
+    const first = response.body.data[0];
+
+    expect(first.bannerUrl).not.toBeNull();
+    expect(first.bannerUrl).toMatch(/^https:\/\//);
+  });
+
+  test("should fallback bannerUrl to screenshot if no artwork", async () => {
+    mockQueryIGDB.mockResolvedValue([
+      {
+        id: 3,
+        name: "Screenshot Game",
+        screenshots: [{ url: "//images.igdb.com/igdb/image/upload/t_thumb/sc001.jpg" }],
+      },
+    ]);
+
+    const response = await request(app).get("/api/games/search?q=Screenshot");
+    const first = response.body.data[0];
+
+    expect(first.bannerUrl).not.toBeNull();
+  });
+
+  test("should set bannerUrl to null if no artwork or screenshot", async () => {
+    mockQueryIGDB.mockResolvedValue([{ id: 4, name: "No Banner Game" }]);
+
+    const response = await request(app).get("/api/games/search?q=NoBanner");
+    const first = response.body.data[0];
+
+    expect(first.bannerUrl).toBeNull();
   });
 
   test("should return 400 if q is missing", async () => {

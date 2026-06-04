@@ -39,7 +39,7 @@ describe("Participations Controller", () => {
     });
     otherUserId = otherUser.id;
 
-    const admin = await prisma.user.create({
+    const _admin = await prisma.user.create({
       data: {
         username: "adminuser",
         email: "admin@example.com",
@@ -123,7 +123,7 @@ describe("Participations Controller", () => {
   });
 
   afterEach(async () => {
-    // Clean up in reverse order of dependencies
+    await prisma.participationVote.deleteMany();
     await prisma.participation.deleteMany();
     await prisma.challenge.deleteMany();
     await prisma.refreshToken.deleteMany();
@@ -371,6 +371,86 @@ describe("Participations Controller", () => {
     test("should return 401 if not authenticated", async () => {
       const response = await request(app).delete("/api/participations/some-slug/vote");
       expect(response.status).toBe(401);
+    });
+
+    test("should return 204 idempotently when no vote exists", async () => {
+      await prisma.participation.create({
+        data: {
+          title: "No Vote Part",
+          slug: "no-vote-part",
+          video: "https://youtube.com/watch?v=novote",
+          userId: otherUserId,
+          challengeId,
+        },
+      });
+
+      const response = await request(app)
+        .delete("/api/participations/no-vote-part/vote")
+        .set("Cookie", accessToken);
+
+      expect(response.status).toBe(204);
+    });
+  });
+
+  describe("POST /api/participations/:slug/vote (duplicate)", () => {
+    test("should return 409 if user votes twice on the same participation", async () => {
+      const participation = await prisma.participation.create({
+        data: {
+          title: "Double Vote",
+          slug: "double-vote",
+          video: "https://youtube.com/watch?v=double",
+          userId: otherUserId,
+          challengeId,
+        },
+      });
+
+      await prisma.participationVote.create({
+        data: { userId, participationId: participation.id },
+      });
+
+      const response = await request(app)
+        .post("/api/participations/double-vote/vote")
+        .set("Cookie", accessToken);
+
+      expect(response.status).toBe(409);
+    });
+  });
+
+  describe("DELETE /api/participations/:slug (auth)", () => {
+    test("should return 401 if not authenticated", async () => {
+      await prisma.participation.create({
+        data: {
+          title: "Auth Delete Part",
+          slug: "auth-delete-part",
+          video: "https://youtube.com/watch?v=del",
+          userId,
+          challengeId,
+        },
+      });
+
+      const response = await request(app).delete("/api/participations/auth-delete-part");
+      expect(response.status).toBe(401);
+    });
+  });
+
+  describe("PATCH /api/participations/:slug (validation)", () => {
+    test("should return 400 if title is too short (< 2 chars)", async () => {
+      await prisma.participation.create({
+        data: {
+          title: "Validate Part",
+          slug: "validate-part",
+          video: "https://youtube.com/watch?v=val",
+          userId,
+          challengeId,
+        },
+      });
+
+      const response = await request(app)
+        .patch("/api/participations/validate-part")
+        .set("Cookie", accessToken)
+        .send({ title: "x" });
+
+      expect(response.status).toBe(400);
     });
   });
 });
