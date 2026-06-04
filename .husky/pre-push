@@ -1,1 +1,1 @@
-pnpm exec tsc --noEmit
+docker exec gamer_challenge_api pnpm exec tsc --noEmit

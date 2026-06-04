@@ -83,16 +83,16 @@ Comptes créés avec le mot de passe `Password123!` :
 
 ## Setup IDE (optionnel)
 
-Par défaut, Docker se suffit à lui-même. Le client Prisma est généré dans le conteneur au moment du build et isolé via un volume anonyme — rien n'est requis en local pour que l'application fonctionne.
+Par défaut, Docker se suffit à lui-même : l'application fonctionne, les migrations tournent, le hook pre-push vérifie le TypeScript dans le conteneur — rien n'est requis en local.
 
-Si tu veux l'autocomplétion TypeScript et les types Prisma dans ton éditeur, installe les dépendances localement :
+Si tu veux l'autocomplétion TypeScript et les types Prisma dans ton éditeur :
 
 ```bash
 pnpm install
 pnpm run db:generate
 ```
 
-> `pnpm install` installe les types TypeScript (`node_modules`) pour l'IDE. `db:generate` produit le client Prisma dans `generated/prisma/` pour que l'éditeur connaisse les types de tes modèles. Ces deux commandes n'ont aucun impact sur Docker.
+> `pnpm install` fournit les types TypeScript à l'IDE. `db:generate` génère le client Prisma dans `generated/prisma/` pour que l'éditeur connaisse les types de tes modèles. Ces deux commandes n'ont aucun impact sur Docker.
 
 ---
 
