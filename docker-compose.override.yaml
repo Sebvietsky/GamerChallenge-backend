@@ -4,3 +4,4 @@ services:
     volumes:
       - ./:/app # Monte le code source local dans le conteneur (live reload)
       - /app/node_modules # Volume anonyme : isole les node_modules du conteneur de ceux de l'hôte
+      - /app/generated # Volume anonyme : isole le client Prisma généré (évite que le bind mount l'écrase)
