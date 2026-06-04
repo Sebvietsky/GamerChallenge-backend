@@ -29,5 +29,26 @@ router.delete(
   checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
   controller.deleteOne
 );
+// Favorites & Likes
+router.post(
+  "/:slug/likes",
+  checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
+  controller.userLikeChallenge
+);
+router.post(
+  "/:slug/favorites",
+  checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
+  controller.userAddChallengeToFavorites
+);
+router.delete(
+  "/:slug/likes",
+  checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
+  controller.userUnlikeChallenge
+);
+router.delete(
+  "/:slug/favorites",
+  checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
+  controller.userDeleteChallengeFromHisFavorites
+);
 
 export default router;

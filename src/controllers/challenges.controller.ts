@@ -410,6 +410,82 @@ const controller = {
 
     res.status(204).end();
   },
+
+  // POST /challenges/:slug/likes
+  async userLikeChallenge(req: Request, res: Response) {
+    const slug = await parseSlugFromParams(req.params.slug as string);
+    console.log(slug);
+    await prisma.challengeVote.create({
+      data: {
+        user: {
+          connect: {
+            id: req.user.id,
+          },
+        },
+        challenge: {
+          connect: {
+            slug,
+          },
+        },
+      },
+    });
+
+    res.status(201).json({ message: "Challenge liked success" });
+  },
+
+  // DELETE /challenges/:slug/likes
+  async userUnlikeChallenge(req: Request, res: Response) {
+    const slug = await parseSlugFromParams(req.params.slug as string);
+
+    await prisma.challengeVote.deleteMany({
+      where: {
+        userId: req.user.id,
+        challenge: {
+          slug,
+        },
+      },
+    });
+
+    res.status(204).end();
+  },
+
+  // POST /challenges/:slug/favorites
+  async userAddChallengeToFavorites(req: Request, res: Response) {
+    const slug = await parseSlugFromParams(req.params.slug as string);
+
+    await prisma.userFavoriteChallenge.create({
+      data: {
+        user: {
+          connect: {
+            id: req.user.id,
+          },
+        },
+        challenge: {
+          connect: {
+            slug,
+          },
+        },
+      },
+    });
+
+    res.status(201).json({ message: "Challenge add to favorite" });
+  },
+
+  // DELETE /challenges/:slug/favorites
+  async userDeleteChallengeFromHisFavorites(req: Request, res: Response) {
+    const slug = await parseSlugFromParams(req.params.slug as string);
+
+    await prisma.userFavoriteChallenge.deleteMany({
+      where: {
+        userId: req.user.id,
+        challenge: {
+          slug,
+        },
+      },
+    });
+
+    res.status(204).end();
+  },
 };
 
 export default controller;
