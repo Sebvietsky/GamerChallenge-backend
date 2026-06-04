@@ -9,14 +9,16 @@ const VALID_PASSWORD = "Password123456!";
 
 describe("Participations Controller", () => {
   let userId: number;
+  let otherUserId: number;
   let gameId: number;
   let categoryId: number;
   let difficultyId: number;
   let challengeId: number;
   let accessToken: string;
+  let adminAccessToken: string;
 
   beforeEach(async () => {
-    // 1. Create a user
+    // 1. Create users
     const user = await prisma.user.create({
       data: {
         username: "testuser",
@@ -27,7 +29,26 @@ describe("Participations Controller", () => {
     });
     userId = user.id;
 
-    // 2. Login to get token
+    const otherUser = await prisma.user.create({
+      data: {
+        username: "otheruser",
+        email: "other@example.com",
+        password: await argon2.hash(VALID_PASSWORD),
+        role: UserRole.user,
+      },
+    });
+    otherUserId = otherUser.id;
+
+    const admin = await prisma.user.create({
+      data: {
+        username: "adminuser",
+        email: "admin@example.com",
+        password: await argon2.hash(VALID_PASSWORD),
+        role: UserRole.admin,
+      },
+    });
+
+    // 2. Login to get tokens
     const loginRes = await request(app)
       .post("/api/auth/login")
       .send({ email: "test@example.com", password: VALID_PASSWORD });
@@ -39,6 +60,18 @@ describe("Participations Controller", () => {
         ? [rawCookies]
         : [];
     accessToken = cookies.find((c: string) => c.startsWith("accessToken=")) || "";
+
+    const adminLoginRes = await request(app)
+      .post("/api/auth/login")
+      .send({ email: "admin@example.com", password: VALID_PASSWORD });
+
+    const adminRawCookies = adminLoginRes.headers["set-cookie"];
+    const adminCookies: string[] = Array.isArray(adminRawCookies)
+      ? adminRawCookies
+      : adminRawCookies
+        ? [adminRawCookies]
+        : [];
+    adminAccessToken = adminCookies.find((c: string) => c.startsWith("accessToken=")) || "";
 
     // 3. Create a game and category
     const gameCategory = await prisma.gameCategory.create({
@@ -162,6 +195,48 @@ describe("Participations Controller", () => {
 
       expect(response.status).toBe(401);
     });
+
+    test("should return 403 if trying to update someone else's participation", async () => {
+      await prisma.participation.create({
+        data: {
+          title: "Other Participation",
+          slug: "other-participation",
+          video: "https://youtube.com/watch?v=other",
+          userId: otherUserId,
+          challengeId,
+        },
+      });
+
+      const response = await request(app)
+        .patch("/api/participations/other-participation")
+        .set("Cookie", accessToken)
+        .send({ title: "Hack Title" });
+
+      expect(response.status).toBe(403);
+    });
+
+    test("should return 200 if admin updates someone else's participation", async () => {
+      await prisma.participation.create({
+        data: {
+          title: "Other Participation",
+          slug: "other-participation",
+          video: "https://youtube.com/watch?v=other",
+          userId: otherUserId,
+          challengeId,
+        },
+      });
+
+      const response = await request(app)
+        .patch("/api/participations/other-participation")
+        .set("Cookie", adminAccessToken)
+        .send({ title: "Admin Update" });
+
+      expect(response.status).toBe(200);
+      const dbParticipation = await prisma.participation.findFirst({
+        where: { slug: "other-participation" },
+      });
+      expect(dbParticipation?.title).toBe("Admin Update");
+    });
   });
 
   describe("DELETE /api/participations/:slug", () => {
@@ -186,9 +261,48 @@ describe("Participations Controller", () => {
       });
       expect(dbParticipation).toBeNull();
 
-      // Ensure the challenge still exists (to check against the suspected bug)
       const dbChallenge = await prisma.challenge.findUnique({ where: { id: challengeId } });
       expect(dbChallenge).not.toBeNull();
+    });
+
+    test("should return 403 if trying to delete someone else's participation", async () => {
+      await prisma.participation.create({
+        data: {
+          title: "Other Participation",
+          slug: "other-participation",
+          video: "https://youtube.com/watch?v=other",
+          userId: otherUserId,
+          challengeId,
+        },
+      });
+
+      const response = await request(app)
+        .delete("/api/participations/other-participation")
+        .set("Cookie", accessToken);
+
+      expect(response.status).toBe(403);
+    });
+
+    test("should return 204 if admin deletes someone else's participation", async () => {
+      await prisma.participation.create({
+        data: {
+          title: "Other Participation",
+          slug: "other-participation",
+          video: "https://youtube.com/watch?v=other",
+          userId: otherUserId,
+          challengeId,
+        },
+      });
+
+      const response = await request(app)
+        .delete("/api/participations/other-participation")
+        .set("Cookie", adminAccessToken);
+
+      expect(response.status).toBe(204);
+      const dbParticipation = await prisma.participation.findFirst({
+        where: { slug: "other-participation" },
+      });
+      expect(dbParticipation).toBeNull();
     });
   });
 });
