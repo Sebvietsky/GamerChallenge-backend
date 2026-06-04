@@ -43,6 +43,8 @@ const controller = {
    * Retrieves a single participation and its associated challenge details by slug.
    * Formats the response to include game categories as a simple array of strings.
    */
+
+  // GET /participations/:slug
   async findOneParticipationWithinOneChallenge(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
 
@@ -70,6 +72,8 @@ const controller = {
   /**
    * Allows a connected user to upvote a specific participation.
    */
+
+  // GET /participations/:slug/vote
   async userLikeParticipation(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
 
@@ -100,6 +104,8 @@ const controller = {
    *   If no records are updated (count === 0), it means the user is not the owner.
    * - If the user has an administrative role: They can update any participation by slug.
    */
+
+  // PATCH /participations/:slug
   async updateOneParticipationWithinOneChallenge(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
     const userId = req.user.id;
@@ -151,6 +157,8 @@ const controller = {
    *   If no records are deleted (count === 0), it means the user is not the owner.
    * - If the user has an administrative role: They can delete any participation by slug.
    */
+
+  // DELETE /participations/:slug
   async deleteOneParticipationWithinOneChallenge(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
     const userId = req.user.id;
@@ -183,6 +191,8 @@ const controller = {
   /**
    * Allows a connected user to remove their upvote from a participation.
    */
+
+  // DELETE /participations/:slug/vote
   async userUnlikeParticipation(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
     const userId = req.user.id;
