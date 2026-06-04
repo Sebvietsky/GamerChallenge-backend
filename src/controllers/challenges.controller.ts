@@ -14,6 +14,7 @@ import {
   parseSlugFromParams,
   challengeSelectParams,
   participationSelectParams,
+  challengeSlugSelectParams,
 } from "../utils/controller.utils";
 import { NotFoundError } from "../lib/errors";
 import {
@@ -198,7 +199,7 @@ const controller = {
       where: {
         slug,
       },
-      select: challengeSelectParams,
+      select: challengeSlugSelectParams,
     });
 
     if (!challenge) throw new NotFoundError("Challenge not found.");
