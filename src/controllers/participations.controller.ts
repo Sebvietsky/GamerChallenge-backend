@@ -20,8 +20,6 @@ const controller = {
       select: { ...participationSelectParams, challenge: { select: challengeSelectParams } },
     });
 
-    if (!participation) throw new NotFoundError("Challenge not found.");
-
     const response = {
       ...participation,
       challenge: {
@@ -60,7 +58,7 @@ const controller = {
   async deleteOneParticipationWithinOneChallenge(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
 
-    await prisma.challenge.delete({
+    await prisma.participation.delete({
       where: {
         slug,
       },
