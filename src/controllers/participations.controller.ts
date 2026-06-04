@@ -73,7 +73,7 @@ const controller = {
    * Allows a connected user to upvote a specific participation.
    */
 
-  // GET /participations/:slug/vote
+  // POST /participations/:slug/vote
   async userLikeParticipation(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
 
