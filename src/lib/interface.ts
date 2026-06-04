@@ -33,6 +33,8 @@ export interface IGDBGame {
     developer: boolean;
     company: { name: string };
   }>;
+  artworks?: Array<{ url: string }>;
+  screenshots?: Array<{ url: string }>;
 }
 
 export interface SafeUserResponse {
