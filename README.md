@@ -106,6 +106,7 @@ pnpm run db:generate
 | `pnpm run docker:dev` | Lance l'environnement complet via Docker Compose |
 | `pnpm run docker:prod` | Lance en mode production (détaché) |
 | `pnpm run docker:down` | Arrête les conteneurs |
+| `pnpm run docker:test` | Lance les tests dans le conteneur Docker |
 | `pnpm run db:generate` | Génère le client Prisma |
 | `pnpm run db:migrate:dev` | Crée et applique une migration (développement) |
 | `pnpm run db:migrate:deploy` | Applique les migrations (production) |
