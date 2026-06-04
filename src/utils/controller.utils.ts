@@ -83,6 +83,7 @@ export const gameSelectParams = {
   studio: true,
   platform: true,
   coverUrl: true,
+  bannerUrl: true,
   categories: {
     select: {
       category: {
