@@ -6,7 +6,7 @@ export async function parseIdFromParams(id: string) {
 }
 
 export async function parseSlugFromParams(slug: string) {
-  return await z.string().min(2).parseAsync(slug);
+  return await z.string().min(40).parseAsync(slug);
 }
 
 export function generateSlug(title: string, username?: string): string {
@@ -74,7 +74,12 @@ export function generateSlug(title: string, username?: string): string {
       .replace(/^-|-$/g, "");
 
     if (!slug) throw new BadRequestError("Invalid Title");
-    return slug;
+
+    const uuid = crypto.randomUUID();
+
+    const finalSlug = `${slug}-${uuid}`;
+
+    return finalSlug;
   }
 }
 

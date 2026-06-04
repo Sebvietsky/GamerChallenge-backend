@@ -1,6 +1,7 @@
 import { type Request, type Response } from "express";
 import {
   challengeSelectParams,
+  generateSlug,
   parseSlugFromParams,
   participationSelectParams,
 } from "../utils/controller.utils";
@@ -113,6 +114,16 @@ const controller = {
     const body = await updateOneParticipationWithinOneChallengeBodySchema.parseAsync(req.body);
 
     const data = body as Prisma.ParticipationUncheckedUpdateInput;
+
+    if (data.title) {
+      const { username } = await prisma.user.findUniqueOrThrow({
+        where: { id: userId },
+      });
+
+      const title = data.title as string;
+
+      data.slug = generateSlug(title, username);
+    }
 
     if (req.user.role === UserRole.user) {
       // Standard users are restricted to their own records
