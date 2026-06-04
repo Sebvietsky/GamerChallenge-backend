@@ -137,17 +137,6 @@ export const participationSelectParams = {
   description: true,
   status: true,
   visibility: true,
-  challenge: {
-    select: {
-      id: true,
-      title: true,
-      slug: true,
-      game: { select: gameSelectParams },
-      challengeCategory: { select: challengeCategorySelectParams },
-      difficulty: { select: difficultySelectParams },
-      user: { select: userSelectParams },
-    },
-  },
   user: { select: userSelectParams },
   _count: {
     select: {
