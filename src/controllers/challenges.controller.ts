@@ -2,10 +2,10 @@ import type { Request, Response } from "express";
 import { Prisma, prisma } from "../lib/prisma";
 import { getPaginationParams } from "../utils/pagination.utils";
 import {
-  FindBestQuerySchema,
+  FindBestForHomePageQuerySchema,
   PaginationOutputSchema,
   QueryChallengeOutputSchema,
-  type FindBestQueryParams,
+  type FindBestForHomePageQueryParams,
   type PaginationParams,
   type QueryChallengeParams,
 } from "../schemas/query.schemas";
@@ -14,6 +14,7 @@ import {
   parseSlugFromParams,
   challengeSelectParams,
   participationSelectParams,
+  challengeSlugSelectParams,
 } from "../utils/controller.utils";
 import { NotFoundError } from "../lib/errors";
 import {
@@ -24,7 +25,7 @@ import {
 } from "../schemas/challenge.schemas";
 import { findOrCreateGameFromIGDB } from "../utils/game.utils";
 
-const SINCE_DAYS: Record<NonNullable<FindBestQueryParams["since"]>, number> = {
+const SINCE_DAYS: Record<NonNullable<FindBestForHomePageQueryParams["since"]>, number> = {
   "1w": 7,
   "1m": 30,
   "3m": 90,
@@ -35,9 +36,8 @@ const SINCE_DAYS: Record<NonNullable<FindBestQueryParams["since"]>, number> = {
 const controller = {
   // GET /home?sortBy=Like&Since=""
   async findBest(req: Request, res: Response): Promise<void> {
-    const { since, limit, sortBy }: FindBestQueryParams = await FindBestQuerySchema.parseAsync(
-      req.query
-    );
+    const { since, limit, sortBy }: FindBestForHomePageQueryParams =
+      await FindBestForHomePageQuerySchema.parseAsync(req.query);
 
     /*
       Convertit le paramètre `since` en date de début de période.
@@ -55,7 +55,7 @@ const controller = {
     */
 
     const ORDER_BY_MAP: Record<
-      NonNullable<FindBestQueryParams["sortBy"]>,
+      NonNullable<FindBestForHomePageQueryParams["sortBy"]>,
       Prisma.ChallengeOrderByWithRelationInput
     > = {
       votes: { votes: { _count: "desc" } },
@@ -199,7 +199,7 @@ const controller = {
       where: {
         slug,
       },
-      select: challengeSelectParams,
+      select: challengeSlugSelectParams,
     });
 
     if (!challenge) throw new NotFoundError("Challenge not found.");
