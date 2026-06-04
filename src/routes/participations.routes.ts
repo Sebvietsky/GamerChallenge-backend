@@ -6,10 +6,20 @@ import controller from "../controllers/participations.controller";
 const router: Router = Router();
 
 router.get("/:slug", controller.findOneParticipationWithinOneChallenge);
+router.post(
+  "/:slug/vote",
+  checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
+  controller.userLikeParticipation
+);
 router.patch(
   "/:slug",
   checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
   controller.updateOneParticipationWithinOneChallenge
+);
+router.delete(
+  "/:slug/vote",
+  checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
+  controller.userUnlikeParticipation
 );
 router.delete(
   "/:slug",

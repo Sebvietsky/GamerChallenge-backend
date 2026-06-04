@@ -162,6 +162,37 @@ describe("Participations Controller", () => {
     });
   });
 
+  describe("POST /api/participations/:slug/vote", () => {
+    test("should return 200 if liked successfully", async () => {
+      await prisma.participation.create({
+        data: {
+          title: "To Like",
+          slug: "to-like",
+          video: "https://youtube.com/watch?v=like",
+          userId: otherUserId,
+          challengeId,
+        },
+      });
+
+      const response = await request(app)
+        .post("/api/participations/to-like/vote")
+        .set("Cookie", accessToken);
+
+      expect(response.status).toBe(200);
+      expect(response.body.message).toBe("Upvote successfully added to the participation.");
+
+      const vote = await prisma.participationVote.findFirst({
+        where: { userId, participation: { slug: "to-like" } },
+      });
+      expect(vote).not.toBeNull();
+    });
+
+    test("should return 401 if not authenticated", async () => {
+      const response = await request(app).post("/api/participations/some-slug/vote");
+      expect(response.status).toBe(401);
+    });
+  });
+
   describe("PATCH /api/participations/:slug", () => {
     test("should return 200 if updated successfully", async () => {
       await prisma.participation.create({
@@ -303,6 +334,43 @@ describe("Participations Controller", () => {
         where: { slug: "other-participation" },
       });
       expect(dbParticipation).toBeNull();
+    });
+  });
+
+  describe("DELETE /api/participations/:slug/vote", () => {
+    test("should return 204 if unliked successfully", async () => {
+      const participation = await prisma.participation.create({
+        data: {
+          title: "To Unlike",
+          slug: "to-unlike",
+          video: "https://youtube.com/watch?v=unlike",
+          userId: otherUserId,
+          challengeId,
+        },
+      });
+
+      await prisma.participationVote.create({
+        data: {
+          userId,
+          participationId: participation.id,
+        },
+      });
+
+      const response = await request(app)
+        .delete("/api/participations/to-unlike/vote")
+        .set("Cookie", accessToken);
+
+      expect(response.status).toBe(204);
+
+      const vote = await prisma.participationVote.findFirst({
+        where: { userId, participation: { slug: "to-unlike" } },
+      });
+      expect(vote).toBeNull();
+    });
+
+    test("should return 401 if not authenticated", async () => {
+      const response = await request(app).delete("/api/participations/some-slug/vote");
+      expect(response.status).toBe(401);
     });
   });
 });
