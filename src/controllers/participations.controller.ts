@@ -4,8 +4,8 @@ import {
   parseSlugFromParams,
   participationSelectParams,
 } from "../utils/controller.utils";
-import { Prisma, prisma } from "../lib/prisma";
-import { NotFoundError } from "../lib/errors";
+import { Prisma, prisma, UserRole } from "../lib/prisma";
+import { ForbiddenError, NotFoundError } from "../lib/errors";
 import { updateOneParticipationWithinOneChallengeBodySchema } from "../schemas/participations.schema";
 
 const controller = {
@@ -37,17 +37,33 @@ const controller = {
   // PATCH /participations/:slug
   async updateOneParticipationWithinOneChallenge(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
+    const userId = req.user.id;
 
     const body = await updateOneParticipationWithinOneChallengeBodySchema.parseAsync(req.body);
 
     const data = body as Prisma.ParticipationUncheckedUpdateInput;
 
-    await prisma.participation.update({
-      where: {
-        slug,
-      },
-      data,
-    });
+    if (req.user.role === UserRole.user) {
+      const result = await prisma.participation.updateMany({
+        where: {
+          slug,
+          userId,
+        },
+        data,
+      });
+      if (result.count === 0) {
+        throw new ForbiddenError(
+          "The connected user is not authorize to modify this participation"
+        );
+      }
+    } else {
+      await prisma.participation.update({
+        where: {
+          slug,
+        },
+        data,
+      });
+    }
 
     res.status(200).send({
       message: "Participation successfully updated.",
@@ -57,12 +73,27 @@ const controller = {
   // DELETE /participations/:slug
   async deleteOneParticipationWithinOneChallenge(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
+    const userId = req.user.id;
 
-    await prisma.participation.delete({
-      where: {
-        slug,
-      },
-    });
+    if (req.user.role === UserRole.user) {
+      const result = await prisma.participation.deleteMany({
+        where: {
+          slug,
+          userId,
+        },
+      });
+      if (result.count === 0) {
+        throw new ForbiddenError(
+          "The connected user is not authorize to delete this participation"
+        );
+      }
+    } else {
+      await prisma.participation.delete({
+        where: {
+          slug,
+        },
+      });
+    }
 
     res.status(204).end();
   },
