@@ -1,1 +1,2 @@
-docker exec gamer_challenge_api pnpm exec tsc --noEmit
+docker exec gamer_challenge_api pnpm exec tsc --noEmit 2>/dev/null || \
+  { echo "❌ Erreur TypeScript ou conteneur Docker non démarré. Lance 'docker compose up' avant de pusher."; exit 1; }
