@@ -64,15 +64,14 @@ export async function queryIGDB<T>(endpoint: string, body: string): Promise<T> {
 //
 // Deux problèmes à corriger :
 //   1. L'URL commence par "//" sans protocole → on ajoute "https:" devant
-//   2. La taille est toujours "t_thumb" (90×128px) → on la remplace par la taille voulue
+//   2. Le segment de taille (ex: "t_thumb") → on le remplace par la taille voulue
 //
-// Tailles disponibles :
-//   - "cover_big" (défaut) : 264×374px, adapté aux cartes et pages de détail
-//   - "thumb"              : 90×128px,  adapté aux miniatures
-//
-// Exemple :
-//   Entrée  → //images.igdb.com/igdb/image/upload/t_thumb/co4jni.jpg
-//   Sortie  → https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg
-export function buildCoverUrl(url: string, size: "cover_big" | "thumb" = "cover_big"): string {
-  return `https:${url.replace("t_thumb", `t_${size}`)}`;
+// Tailles disponibles : https://api-docs.igdb.com/#images
+export function buildImageUrl(
+  url: string,
+  size: "cover_big" | "thumb" | "screenshot_huge" | "1080p" | "original" = "cover_big"
+): string {
+  return `https:${url.replace(/t_[^/]+/, `t_${size}`)}`;
 }
+
+export const buildCoverUrl = (url: string) => buildImageUrl(url, "cover_big");

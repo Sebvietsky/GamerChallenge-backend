@@ -1,4 +1,4 @@
-import type { UserRole } from "./prisma";
+import type { UserRole, UserStatus } from "./prisma";
 
 export interface Token {
   token: string;
@@ -33,4 +33,32 @@ export interface IGDBGame {
     developer: boolean;
     company: { name: string };
   }>;
+  artworks?: Array<{ url: string }>;
+  screenshots?: Array<{ url: string }>;
+}
+
+export interface SafeUserResponse {
+  createdAt: Date;
+  id: number;
+  status: UserStatus;
+  visibility: boolean;
+  updatedAt: Date;
+  username: string;
+  email: string;
+  country: string | null;
+  bio: string | null;
+  profilePicture: string | null;
+  role: UserRole;
+}
+export interface UserReponse {
+  id: number;
+  username: string;
+  country: string | null;
+  profilePicture: string | null;
+}
+
+export interface MostActivUserResponse extends UserReponse {
+  participationCount: number;
+  challengeCount: number;
+  totalActivity: number;
 }

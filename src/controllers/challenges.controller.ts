@@ -2,25 +2,88 @@ import type { Request, Response } from "express";
 import { Prisma, prisma } from "../lib/prisma";
 import { getPaginationParams } from "../utils/pagination.utils";
 import {
+  FindBestForHomePageQuerySchema,
   PaginationOutputSchema,
   QueryChallengeOutputSchema,
+  type FindBestForHomePageQueryParams,
   type PaginationParams,
   type QueryChallengeParams,
 } from "../schemas/query.schemas";
 import {
-  challengeSelectParams,
   generateSlug,
   parseSlugFromParams,
+  challengeSelectParams,
+  participationSelectParams,
+  challengeSlugSelectParams,
 } from "../utils/controller.utils";
 import { NotFoundError } from "../lib/errors";
 import {
   createOneChallengeBodySchema,
+  createOneParticipationWithinOneChallengeBodySchema,
   updateOneChallengeBodySchema,
   type updateOneChallengeParams,
 } from "../schemas/challenge.schemas";
 import { findOrCreateGameFromIGDB } from "../utils/game.utils";
 
+const SINCE_DAYS: Record<NonNullable<FindBestForHomePageQueryParams["since"]>, number> = {
+  "1w": 7,
+  "1m": 30,
+  "3m": 90,
+  "6m": 180,
+  "1y": 365,
+};
+
 const controller = {
+  // GET /home?sortBy=Like&Since=""
+  async findBest(req: Request, res: Response): Promise<void> {
+    const { since, limit, sortBy }: FindBestForHomePageQueryParams =
+      await FindBestForHomePageQuerySchema.parseAsync(req.query);
+
+    /*
+      Convertit le paramètre `since` en date de début de période.
+      Sans `since`, sinceDate reste undefined et aucun filtre de date n'est appliqué (all time).
+    */
+
+    const sinceDate = since
+      ? new Date(Date.now() - SINCE_DAYS[since] * 24 * 60 * 60 * 1000)
+      : undefined;
+
+    /*
+      Mappe `sortBy` vers la clause Prisma correspondante.
+      votes/participations trient par _count (nombre de relations),
+      createdAt trie directement sur le champ scalaire.
+    */
+
+    const ORDER_BY_MAP: Record<
+      NonNullable<FindBestForHomePageQueryParams["sortBy"]>,
+      Prisma.ChallengeOrderByWithRelationInput
+    > = {
+      votes: { votes: { _count: "desc" } },
+      participations: { participations: { _count: "desc" } },
+      createdAt: { createdAt: "desc" },
+    };
+
+    const challenges = await prisma.challenge.findMany({
+      where: {
+        ...(sinceDate && { createdAt: { gte: sinceDate } }),
+      },
+      select: challengeSelectParams,
+      orderBy: ORDER_BY_MAP[sortBy],
+      take: limit,
+    });
+
+    // Aplatit les catégories de jeu : [{ category: { name } }] → [name]
+    const response = challenges.map((chall) => ({
+      ...chall,
+      game: {
+        ...chall.game,
+        categories: chall.game.categories.map(({ category }) => category.name),
+      },
+    }));
+
+    res.status(200).json({ data: response });
+  },
+
   // GET /challenges
   async findAll(req: Request, res: Response): Promise<void> {
     const { page, limit }: PaginationParams = await PaginationOutputSchema.parseAsync(req.query);
@@ -31,24 +94,34 @@ const controller = {
       difficulty,
       creator,
       status,
+      since,
       closesAfter,
       closesBefore,
       orderBy,
       sort,
     }: QueryChallengeParams = await QueryChallengeOutputSchema.parseAsync(req.query);
 
+    const sinceDate = since
+      ? new Date(Date.now() - SINCE_DAYS[since] * 24 * 60 * 60 * 1000)
+      : undefined;
+
     const where: Prisma.ChallengeWhereInput = {
       ...(search && { title: { contains: search, mode: "insensitive" } }),
+      ...(sinceDate && { createdAt: { gte: sinceDate } }),
       ...(category && { challengeCategory: { name: category } }),
       ...(game && { game: { name: { contains: game, mode: "insensitive" } } }),
       ...(difficulty && { difficulty: { name: difficulty } }),
-      ...(creator && { user: { username: { contains: creator, mode: "insensitive" } } }),
+      ...(creator && {
+        user: { username: { contains: creator, mode: "insensitive" } },
+      }),
       ...(status && { status }),
+
       /*
         Filtre par date de fermeture. Les challenges dont closesAt est NULL (sans date de fin)
         sont exclus dès qu'un filtre de date est appliqué — ils apparaissent dans le listing général.
         gte = "greater than or equal" (supérieur ou égal), lte = "less than or equal" (inférieur ou égal).
       */
+
       ...((closesAfter || closesBefore) && {
         closesAt: {
           ...(closesAfter && { gte: closesAfter }),
@@ -122,11 +195,11 @@ const controller = {
   async findOne(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
 
-    const challenge = await prisma.challenge.findFirst({
+    const challenge = await prisma.challenge.findUniqueOrThrow({
       where: {
         slug,
       },
-      select: challengeSelectParams,
+      select: challengeSlugSelectParams,
     });
 
     if (!challenge) throw new NotFoundError("Challenge not found.");
@@ -140,6 +213,45 @@ const controller = {
     };
 
     res.status(200).send(response);
+  },
+
+  // GET /challenges/:slug/participations
+  async findAllParticipationsWithinOneChallenge(req: Request, res: Response) {
+    const slug = await parseSlugFromParams(req.params.slug as string);
+
+    const { page, limit }: PaginationParams = await PaginationOutputSchema.parseAsync(req.query);
+
+    const { skip, take } = getPaginationParams(page, limit);
+
+    const [participations, total] = await Promise.all([
+      prisma.participation.findMany({
+        where: {
+          challenge: {
+            slug,
+          },
+        },
+        select: participationSelectParams,
+
+        skip,
+        take,
+      }),
+
+      prisma.participation.count({
+        where: {
+          challenge: {
+            slug,
+          },
+        },
+      }),
+    ]);
+
+    res.status(200).json({
+      data: participations,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    });
   },
 
   // POST /challenges
@@ -165,6 +277,7 @@ const controller = {
       igdbId,
       challengeCategoryId,
       difficultyId,
+      status,
     } = await createOneChallengeBodySchema.parseAsync(req.body);
 
     const { username } = await prisma.user.findUniqueOrThrow({
@@ -189,6 +302,7 @@ const controller = {
         demo: demo ?? null,
         goals: goals ?? null,
         closesAt: closesAt ?? null,
+        status,
         game: {
           connect: {
             id: gameId,
@@ -209,6 +323,50 @@ const controller = {
 
     res.status(201).send({
       message: "Challenge successfully created.",
+    });
+  },
+
+  // POST /challenges/:slug/participations
+  /*
+    video          String              @db.VarChar(255)
+    title          String              @db.VarChar(200)
+    description    String?             @db.Text
+    challengeId    Int                 @map("challenge_id")
+    userId         Int                 @map("user_id")
+  */
+  async createOneParticipationWithinOneChallenge(req: Request, res: Response) {
+    const slug = await parseSlugFromParams(req.params.slug as string);
+
+    const { title, description, video } =
+      await createOneParticipationWithinOneChallengeBodySchema.parseAsync(req.body);
+
+    const { username } = await prisma.user.findUniqueOrThrow({
+      where: {
+        id: req.user.id,
+      },
+    });
+
+    await prisma.participation.create({
+      data: {
+        user: {
+          connect: {
+            id: req.user.id,
+          },
+        },
+        challenge: {
+          connect: {
+            slug,
+          },
+        },
+        title,
+        slug: generateSlug(title, username),
+        description,
+        video,
+      },
+    });
+
+    res.status(201).send({
+      message: "Participation successfully created.",
     });
   },
 

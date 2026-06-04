@@ -4,7 +4,7 @@ import { NotFoundError } from "../lib/errors";
 import { getPaginationParams } from "../utils/pagination.utils";
 import { PaginationOutputSchema, type PaginationParams } from "../schemas/query.schemas";
 import { searchGamesQuerySchema } from "../schemas/games.schemas";
-import { queryIGDB, buildCoverUrl } from "../utils/igdb.utils";
+import { queryIGDB, buildCoverUrl, buildImageUrl } from "../utils/igdb.utils";
 import type { IGDBGame } from "../lib/interface";
 
 const selectParams = {
@@ -14,6 +14,7 @@ const selectParams = {
   studio: true,
   platform: true,
   coverUrl: true,
+  bannerUrl: true,
   createdAt: true,
   categories: {
     select: {
@@ -83,11 +84,11 @@ const controller = {
 
   // Recherche sur IGDB — utilisé pour l'autocomplétion lors de la création d'un challenge.
   async search(req: Request, res: Response): Promise<void> {
-    const { q, limit } = await searchGamesQuerySchema.parseAsync(req.query);
+    const { q, limit, bannerSize } = await searchGamesQuerySchema.parseAsync(req.query);
 
     const games = await queryIGDB<IGDBGame[]>(
       "games",
-      `fields name, summary, cover.url, platforms.name, involved_companies.developer, involved_companies.company.name;
+      `fields name, summary, cover.url, platforms.name, involved_companies.developer, involved_companies.company.name, artworks.url, screenshots.url;
        search "${q}";
        where version_parent = null;
        limit ${limit};`
@@ -97,6 +98,8 @@ const controller = {
       const developer = game.involved_companies?.find((ic) => ic.developer)?.company.name ?? null;
       const platforms = game.platforms?.map((p) => p.name).join(", ") ?? null;
       const coverUrl = game.cover ? buildCoverUrl(game.cover.url) : null;
+      const bannerRaw = game.artworks?.[0]?.url ?? game.screenshots?.[0]?.url ?? null;
+      const bannerUrl = bannerRaw ? buildImageUrl(bannerRaw, bannerSize) : null;
 
       return {
         igdbId: game.id,
@@ -105,6 +108,7 @@ const controller = {
         studio: developer,
         platform: platforms,
         coverUrl,
+        bannerUrl,
       };
     });
 
