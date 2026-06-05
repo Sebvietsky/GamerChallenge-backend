@@ -136,7 +136,7 @@ const controller = {
         visibility: user.visibility,
         status: user.status,
         createdAt: user.createdAt,
-        updatedAt: user.createdAt,
+        updatedAt: user.updatedAt,
         id: user.id,
       } satisfies SafeUserResponse,
     });
