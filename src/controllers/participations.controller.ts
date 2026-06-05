@@ -116,10 +116,6 @@ const controller = {
     const data = body as Prisma.ParticipationUncheckedUpdateInput;
 
     if (data.title) {
-      const { username } = await prisma.user.findUniqueOrThrow({
-        where: { id: userId },
-      });
-
       const title = data.title as string;
 
       data.slug = generateSlug(title);
