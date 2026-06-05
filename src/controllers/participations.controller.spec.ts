@@ -111,7 +111,7 @@ describe("Participations Controller", () => {
     const challenge = await prisma.challenge.create({
       data: {
         title: "Test Challenge",
-        slug: "test-challenge",
+        slug: "test-challenge-long-slug-to-pass-validation-aaaaaaaaaaaaaaaa",
         description: "Description",
         userId,
         gameId,
@@ -140,14 +140,16 @@ describe("Participations Controller", () => {
       await prisma.participation.create({
         data: {
           title: "My Participation",
-          slug: "my-participation",
+          slug: "my-participation-long-slug-to-pass-validation-aaaaaaaaaa",
           video: "https://youtube.com/watch?v=123",
           userId,
           challengeId,
         },
       });
 
-      const response = await request(app).get("/api/participations/my-participation");
+      const response = await request(app).get(
+        "/api/participations/my-participation-long-slug-to-pass-validation-aaaaaaaaaa"
+      );
 
       expect(response.status).toBe(200);
       expect(response.body.title).toBe("My Participation");
@@ -157,7 +159,9 @@ describe("Participations Controller", () => {
     });
 
     test("should return 404 if not found", async () => {
-      const response = await request(app).get("/api/participations/non-existent");
+      const response = await request(app).get(
+        "/api/participations/non-existent-but-long-enough-slug-to-pass-validation-aaaaaaaaaa"
+      );
       expect(response.status).toBe(404);
     });
   });
@@ -167,7 +171,7 @@ describe("Participations Controller", () => {
       await prisma.participation.create({
         data: {
           title: "To Like",
-          slug: "to-like",
+          slug: "to-like-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaa",
           video: "https://youtube.com/watch?v=like",
           userId: otherUserId,
           challengeId,
@@ -175,20 +179,25 @@ describe("Participations Controller", () => {
       });
 
       const response = await request(app)
-        .post("/api/participations/to-like/vote")
+        .post("/api/participations/to-like-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaa/vote")
         .set("Cookie", accessToken);
 
       expect(response.status).toBe(200);
       expect(response.body.message).toBe("Upvote successfully added to the participation.");
 
       const vote = await prisma.participationVote.findFirst({
-        where: { userId, participation: { slug: "to-like" } },
+        where: {
+          userId,
+          participation: { slug: "to-like-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaa" },
+        },
       });
       expect(vote).not.toBeNull();
     });
 
     test("should return 401 if not authenticated", async () => {
-      const response = await request(app).post("/api/participations/some-slug/vote");
+      const response = await request(app).post(
+        "/api/participations/some-slug-long-enough-to-pass-validation-aaaaaaaaaaaaaa/vote"
+      );
       expect(response.status).toBe(401);
     });
   });
@@ -198,7 +207,7 @@ describe("Participations Controller", () => {
       await prisma.participation.create({
         data: {
           title: "Old Title",
-          slug: "old-title",
+          slug: "old-title-testuser-long-slug-to-pass-validation-aaaaaaaaa",
           video: "https://youtube.com/watch?v=old",
           userId,
           challengeId,
@@ -206,7 +215,7 @@ describe("Participations Controller", () => {
       });
 
       const response = await request(app)
-        .patch("/api/participations/old-title")
+        .patch("/api/participations/old-title-testuser-long-slug-to-pass-validation-aaaaaaaaa")
         .set("Cookie", accessToken)
         .send({ title: "Updated Title" });
 
@@ -214,14 +223,42 @@ describe("Participations Controller", () => {
       expect(response.body.message).toBe("Participation successfully updated.");
 
       const dbParticipation = await prisma.participation.findFirst({
-        where: { slug: "old-title" },
+        where: { title: "Updated Title" },
       });
+      // Title should be updated, slug now contains admin/user part (as before) or UUID (if not username)
+      // The current controller logic for PATCH still uses username if provided
       expect(dbParticipation?.title).toBe("Updated Title");
+      expect(dbParticipation?.slug).toBeTruthy();
+    });
+
+    test("should regenerate slug when title is updated", async () => {
+      await prisma.participation.create({
+        data: {
+          title: "Initial Title",
+          slug: "initial-title-testuser-long-slug-to-pass-validation-aaaaaa",
+          video: "https://youtube.com/watch?v=init",
+          userId,
+          challengeId,
+        },
+      });
+
+      const response = await request(app)
+        .patch("/api/participations/initial-title-testuser-long-slug-to-pass-validation-aaaaaa")
+        .set("Cookie", accessToken)
+        .send({ title: "New Shiny Title" });
+
+      expect(response.status).toBe(200);
+
+      const dbParticipation = await prisma.participation.findFirst({
+        where: { title: "New Shiny Title" },
+      });
+      expect(dbParticipation?.slug).toContain("new-shiny-title");
+      expect(dbParticipation?.slug).toBeTruthy();
     });
 
     test("should return 401 if not authenticated", async () => {
       const response = await request(app)
-        .patch("/api/participations/some-slug")
+        .patch("/api/participations/some-slug-long-enough-to-pass-validation-aaaaaaaaaaaaaa")
         .send({ title: "Updated Title" });
 
       expect(response.status).toBe(401);
@@ -231,7 +268,7 @@ describe("Participations Controller", () => {
       await prisma.participation.create({
         data: {
           title: "Other Participation",
-          slug: "other-participation",
+          slug: "other-participation-long-slug-to-pass-validation-aaaaaaaa",
           video: "https://youtube.com/watch?v=other",
           userId: otherUserId,
           challengeId,
@@ -239,7 +276,7 @@ describe("Participations Controller", () => {
       });
 
       const response = await request(app)
-        .patch("/api/participations/other-participation")
+        .patch("/api/participations/other-participation-long-slug-to-pass-validation-aaaaaaaa")
         .set("Cookie", accessToken)
         .send({ title: "Hack Title" });
 
@@ -250,7 +287,7 @@ describe("Participations Controller", () => {
       await prisma.participation.create({
         data: {
           title: "Other Participation",
-          slug: "other-participation",
+          slug: "other-participation-otheruser-long-slug-to-pass-validation",
           video: "https://youtube.com/watch?v=other",
           userId: otherUserId,
           challengeId,
@@ -258,15 +295,16 @@ describe("Participations Controller", () => {
       });
 
       const response = await request(app)
-        .patch("/api/participations/other-participation")
+        .patch("/api/participations/other-participation-otheruser-long-slug-to-pass-validation")
         .set("Cookie", adminAccessToken)
         .send({ title: "Admin Update" });
 
       expect(response.status).toBe(200);
       const dbParticipation = await prisma.participation.findFirst({
-        where: { slug: "other-participation" },
+        where: { title: "Admin Update" },
       });
-      expect(dbParticipation?.title).toBe("Admin Update");
+      expect(dbParticipation?.slug).toContain("admin-update");
+      expect(dbParticipation?.slug).toBeTruthy();
     });
   });
 
@@ -275,7 +313,7 @@ describe("Participations Controller", () => {
       await prisma.participation.create({
         data: {
           title: "To Delete",
-          slug: "to-delete",
+          slug: "to-delete-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaa",
           video: "https://youtube.com/watch?v=del",
           userId,
           challengeId,
@@ -283,12 +321,12 @@ describe("Participations Controller", () => {
       });
 
       const response = await request(app)
-        .delete("/api/participations/to-delete")
+        .delete("/api/participations/to-delete-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaa")
         .set("Cookie", accessToken);
 
       expect(response.status).toBe(204);
       const dbParticipation = await prisma.participation.findFirst({
-        where: { slug: "to-delete" },
+        where: { slug: "to-delete-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaa" },
       });
       expect(dbParticipation).toBeNull();
 
@@ -300,7 +338,7 @@ describe("Participations Controller", () => {
       await prisma.participation.create({
         data: {
           title: "Other Participation",
-          slug: "other-participation",
+          slug: "other-participation-long-slug-to-pass-validation-aaaaaaaa",
           video: "https://youtube.com/watch?v=other",
           userId: otherUserId,
           challengeId,
@@ -308,7 +346,7 @@ describe("Participations Controller", () => {
       });
 
       const response = await request(app)
-        .delete("/api/participations/other-participation")
+        .delete("/api/participations/other-participation-long-slug-to-pass-validation-aaaaaaaa")
         .set("Cookie", accessToken);
 
       expect(response.status).toBe(403);
@@ -318,7 +356,7 @@ describe("Participations Controller", () => {
       await prisma.participation.create({
         data: {
           title: "Other Participation",
-          slug: "other-participation",
+          slug: "other-participation-otheruser-long-slug-to-pass-validation",
           video: "https://youtube.com/watch?v=other",
           userId: otherUserId,
           challengeId,
@@ -326,12 +364,12 @@ describe("Participations Controller", () => {
       });
 
       const response = await request(app)
-        .delete("/api/participations/other-participation")
+        .delete("/api/participations/other-participation-otheruser-long-slug-to-pass-validation")
         .set("Cookie", adminAccessToken);
 
       expect(response.status).toBe(204);
       const dbParticipation = await prisma.participation.findFirst({
-        where: { slug: "other-participation" },
+        where: { slug: "other-participation-otheruser-long-slug-to-pass-validation" },
       });
       expect(dbParticipation).toBeNull();
     });
@@ -342,7 +380,7 @@ describe("Participations Controller", () => {
       const participation = await prisma.participation.create({
         data: {
           title: "To Unlike",
-          slug: "to-unlike",
+          slug: "to-unlike-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaa",
           video: "https://youtube.com/watch?v=unlike",
           userId: otherUserId,
           challengeId,
@@ -357,19 +395,26 @@ describe("Participations Controller", () => {
       });
 
       const response = await request(app)
-        .delete("/api/participations/to-unlike/vote")
+        .delete(
+          "/api/participations/to-unlike-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaa/vote"
+        )
         .set("Cookie", accessToken);
 
       expect(response.status).toBe(204);
 
       const vote = await prisma.participationVote.findFirst({
-        where: { userId, participation: { slug: "to-unlike" } },
+        where: {
+          userId,
+          participation: { slug: "to-unlike-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaa" },
+        },
       });
       expect(vote).toBeNull();
     });
 
     test("should return 401 if not authenticated", async () => {
-      const response = await request(app).delete("/api/participations/some-slug/vote");
+      const response = await request(app).delete(
+        "/api/participations/some-slug-long-enough-to-pass-validation-aaaaaaaaaaaaaa/vote"
+      );
       expect(response.status).toBe(401);
     });
 

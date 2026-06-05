@@ -6,76 +6,32 @@ export async function parseIdFromParams(id: string) {
 }
 
 export async function parseSlugFromParams(slug: string) {
-  return await z.string().min(2).parseAsync(slug);
+  return await z.string().min(40).parseAsync(slug);
 }
 
-export function generateSlug(title: string, username?: string): string {
-  if (username) {
-    const slug =
-      title
-        .trim()
-        .toLowerCase()
+export function generateSlug(title: string): string {
+  const slug = title
+    .trim()
+    .toLowerCase()
+    // Supprime les accents (é -> e, à -> a, etc.)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    // Remplace les apostrophes par rien
+    .replace(/['’]/g, "")
+    // Remplace tout ce qui n'est pas lettre/chiffre par un espace
+    .replace(/[^a-z0-9]+/g, "-")
+    // Évite les --- successifs
+    .replace(/-+/g, "-")
+    // Supprime les - au début et à la fin
+    .replace(/^-|-$/g, "");
 
-        // Supprime les accents (é -> e, à -> a, etc.)
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
+  if (!slug) throw new BadRequestError("Invalid Title");
 
-        // Remplace les apostrophes par rien
-        .replace(/['’]/g, "")
+  const uuid = crypto.randomUUID();
 
-        // Remplace tout ce qui n'est pas lettre/chiffre par un espace
-        .replace(/[^a-z0-9]+/g, "-")
+  const finalSlug = `${slug}-${uuid}`;
 
-        // Évite les --- successifs
-        .replace(/-+/g, "-")
-
-        // Supprime les - au début et à la fin
-        .replace(/^-|-$/g, "") +
-      username
-        .trim()
-        .toLowerCase()
-
-        // Supprime les accents (é -> e, à -> a, etc.)
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-
-        // Remplace les apostrophes par rien
-        .replace(/['’]/g, "")
-
-        // Remplace tout ce qui n'est pas lettre/chiffre par un espace
-        .replace(/[^a-z0-9]+/g, "-")
-
-        // Évite les --- successifs
-        .replace(/-+/g, "-")
-
-        // Supprime les - au début et à la fin
-        .replace(/^-|-$/g, "");
-    if (!slug) throw new BadRequestError("Invalid Username or Title.");
-    return slug || "untitled";
-  } else {
-    const slug = title
-      .trim()
-      .toLowerCase()
-
-      // Supprime les accents (é -> e, à -> a, etc.)
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-
-      // Remplace les apostrophes par rien
-      .replace(/['’]/g, "")
-
-      // Remplace tout ce qui n'est pas lettre/chiffre par un espace
-      .replace(/[^a-z0-9]+/g, "-")
-
-      // Évite les --- successifs
-      .replace(/-+/g, "-")
-
-      // Supprime les - au début et à la fin
-      .replace(/^-|-$/g, "");
-
-    if (!slug) throw new BadRequestError("Invalid Title");
-    return slug;
-  }
+  return finalSlug;
 }
 
 export const gameSelectParams = {
