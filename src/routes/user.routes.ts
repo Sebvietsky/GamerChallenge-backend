@@ -6,7 +6,7 @@ import { UserRole } from "../lib/prisma.ts";
 const router: Router = Router();
 
 router.get(
-  "/favorites",
+  "/getFavorites",
   checkRoles([UserRole.user, UserRole.moderator, UserRole.admin]),
   controller.getFavorites
 );
@@ -16,7 +16,7 @@ router.get(
   controller.getFavoritesSlugs
 );
 router.get(
-  "/isLikedChallenges",
+  "/isLikedChallenge",
   checkRoles([UserRole.user, UserRole.moderator, UserRole.admin]),
   controller.getLikedChallengesSlugs
 );
@@ -26,7 +26,7 @@ router.get(
   controller.getLikedChallenges
 );
 router.get(
-  "/isLikedParticipations",
+  "/isLikedParticipation",
   checkRoles([UserRole.user, UserRole.moderator, UserRole.admin]),
   controller.getLikedParticipationsSlugs
 );
