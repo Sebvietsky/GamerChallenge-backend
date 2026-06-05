@@ -93,6 +93,46 @@ Comptes créés avec le mot de passe `Password123!` :
 
 ---
 
+## Documentation API (Swagger)
+
+Une fois l'API lancée, la documentation interactive est disponible à :
+
+| URL | Description |
+|---|---|
+| `http://localhost:<API_LOCAL_PORT>/api-docs/` | Interface Swagger UI |
+| `http://localhost:<API_LOCAL_PORT>/api-docs.json` | Spec OpenAPI 3.0 brute (JSON) |
+
+La spec JSON peut être importée directement dans Postman, Insomnia ou Bruno.
+
+### Authentification
+
+Les routes protégées utilisent un cookie HTTP-only `accessToken`. Dans Swagger UI :
+1. Appeler `POST /auth/login` via "Try it out"
+2. Le cookie est automatiquement positionné par le navigateur
+3. Les routes sécurisées (cadenas 🔒) fonctionnent ensuite sans configuration supplémentaire
+
+### Lire les contraintes d'un champ
+
+Dans la vue d'un body de requête, deux onglets sont disponibles :
+- **Example Value** — exemple de valeur à envoyer
+- **Schema** — détail des contraintes : longueurs min/max, formats attendus, valeurs autorisées, descriptions
+
+### Maintenir la documentation
+
+Les fichiers de documentation se trouvent dans `src/openapi/paths/`. Chaque domaine a son fichier (`auth.paths.ts`, `challenges.paths.ts`, etc.).
+
+Pour documenter un nouveau champ dans un schema Zod, importer `z` depuis `../lib/zod` et utiliser `.openapi()` :
+
+```ts
+import z from "../lib/zod";
+
+const monSchema = z.object({
+  titre: z.string().min(2).openapi({ description: "Titre du challenge", example: "Speedrun Zelda" }),
+});
+```
+
+---
+
 ## Scripts disponibles
 
 | Commande | Description |

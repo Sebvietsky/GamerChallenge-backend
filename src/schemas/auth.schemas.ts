@@ -1,4 +1,4 @@
-import z from "zod";
+import z from "../lib/zod";
 
 export const passwordSchema = z
   .string()
@@ -6,18 +6,22 @@ export const passwordSchema = z
   .max(100)
   .regex(/[a-z]/, "Password must contain at least one lowercase caracter")
   .regex(/[A-Z]/, "Password must contain at least one uppercase caracter")
-  .regex(/[0-9]/, "Password must contain at least one number");
+  .regex(/[0-9]/, "Password must contain at least one number")
+  .openapi({
+    description:
+      "12 à 100 caractères, doit contenir au moins une majuscule, une minuscule et un chiffre",
+  });
 
 export const loginUserBodySchema = z.object({
-  email: z.email(),
-  password: z.string(),
+  email: z.email().openapi({ example: "joueur@example.com" }),
+  password: z.string().openapi({ example: "MonMotDePasse1" }),
 });
 
 export const resetPasswordBodySchema = z
   .object({
-    currentPassword: z.string(),
+    currentPassword: z.string().openapi({ description: "Mot de passe actuel" }),
     newPassword: passwordSchema,
-    confirm: z.string(),
+    confirm: z.string().openapi({ description: "Doit être identique à newPassword" }),
   })
   .refine((data) => data.newPassword === data.confirm, {
     message: "New passwords doesn't match",
@@ -26,13 +30,19 @@ export const resetPasswordBodySchema = z
 
 export const registerUserBodySchema = z
   .object({
-    username: z.string().min(2),
-    email: z.email(),
+    username: z
+      .string()
+      .min(2)
+      .openapi({ description: "Pseudo unique, minimum 2 caractères", example: "LinkRunner" }),
+    email: z.email().openapi({ example: "joueur@example.com" }),
     password: passwordSchema,
-    confirm: z.string(),
-    country: z.string().optional(),
-    bio: z.string().optional(),
-    profilePicture: z.string().optional(),
+    confirm: z.string().openapi({ description: "Doit être identique à password" }),
+    country: z.string().optional().openapi({ description: "Optionnel", example: "France" }),
+    bio: z.string().optional().openapi({ description: "Optionnel" }),
+    profilePicture: z
+      .string()
+      .optional()
+      .openapi({ description: "URL de la photo de profil (optionnel)" }),
   })
   // https://v3.zod.dev/?id=refine
   .refine((data) => data.password === data.confirm, {
