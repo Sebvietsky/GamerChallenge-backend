@@ -6,9 +6,8 @@ API REST du projet GamerChallenges, construite avec Express, Prisma et PostgreSQ
 
 ## Prérequis
 
-- [Node.js](https://nodejs.org/) >= 20
-- [pnpm](https://pnpm.io/) >= 10
 - [Docker](https://www.docker.com/) & Docker Compose
+- [pnpm](https://pnpm.io/) >= 10 — uniquement pour le setup de l'IDE (types TypeScript et Prisma)
 
 ---
 
@@ -21,13 +20,7 @@ git clone <url-du-repo>
 cd projet-cda-GamerChallenges-backend
 ```
 
-### 2. Installer les dépendances
-
-```bash
-pnpm install
-```
-
-### 3. Configurer les variables d'environnement
+### 2. Configurer les variables d'environnement
 
 ```bash
 cp .env.example .env
@@ -46,24 +39,12 @@ cp .env.example .env
 | `NODE_ENV` | Environnement (`development` / `production`) |
 | `JWT_SECRET` | Clé secrète pour la signature des JWT |
 | `ALLOWED_ORIGINS` | Origine autorisée pour CORS (ex: `http://localhost:5173`) |
+| `IGDB_CLIENT_ID` | Client ID Twitch/IGDB (console : https://dev.twitch.tv/console) |
+| `IGDB_CLIENT_SECRET` | Client Secret Twitch/IGDB |
 
 > **Important** : `ALLOWED_ORIGINS` doit être une URL stricte. Ne jamais utiliser `*` avec des cookies et `credentials: true`.
 
-### 4. Générer le client Prisma
-
-> **Cette étape est obligatoire avant de lancer Docker Compose.**
-
-```bash
-pnpm run db:generate
-```
-
-### 5. Lancer avec Docker Compose
-
-```bash
-pnpm run docker:dev
-```
-
-ou directement :
+### 3. Lancer avec Docker Compose
 
 ```bash
 docker compose up --build
@@ -71,13 +52,21 @@ docker compose up --build
 
 L'API sera disponible sur `http://localhost:<API_LOCAL_PORT>`.
 
-### 6. Alimenter la base de données (optionnel)
+### 4. Alimenter la base de données (optionnel)
 
-Une fois les conteneurs démarrés et les migrations appliquées :
+Une fois les conteneurs démarrés et les migrations appliquées, deux approches sont possibles :
 
+**Via Docker (sans pnpm local) :**
+```bash
+docker exec gamer_challenge_api pnpm run db:seed
+```
+
+**Via pnpm en local (si le setup IDE est fait) :**
 ```bash
 pnpm run db:seed
 ```
+
+Les deux sont équivalentes. La version locale fonctionne car Docker expose le port PostgreSQL sur `localhost` — Prisma lit le `DATABASE_URL` du `.env` local et se connecte directement à la base.
 
 Cela insère des données de test réalistes (jeux, challenges, utilisateurs, participations, votes).
 
@@ -87,9 +76,23 @@ Comptes créés avec le mot de passe `Password123!` :
 |---|---|
 | `admin@gamerchallenge.dev` | admin |
 | `moderator@gamerchallenge.dev` | moderator |
-| `inactive@gamerchallenge.dev` | user (inactif) |
 
-> Pour repartir d'une base vide et re-seeder en une commande : `pnpm run db:reset`
+> Pour repartir d'une base vide et re-seeder en une commande : `docker exec gamer_challenge_api pnpm run db:reset` ou `pnpm run db:reset` en local.
+
+---
+
+## Setup IDE (optionnel)
+
+Par défaut, Docker se suffit à lui-même : l'application fonctionne, les migrations tournent, le hook pre-push vérifie le TypeScript dans le conteneur — rien n'est requis en local.
+
+Si tu veux l'autocomplétion TypeScript et les types Prisma dans ton éditeur :
+
+```bash
+pnpm install
+pnpm run db:generate
+```
+
+> `pnpm install` fournit les types TypeScript à l'IDE. `db:generate` génère le client Prisma dans `generated/prisma/` pour que l'éditeur connaisse les types de tes modèles. Ces deux commandes n'ont aucun impact sur Docker.
 
 ---
 
@@ -143,6 +146,7 @@ const monSchema = z.object({
 | `pnpm run docker:dev` | Lance l'environnement complet via Docker Compose |
 | `pnpm run docker:prod` | Lance en mode production (détaché) |
 | `pnpm run docker:down` | Arrête les conteneurs |
+| `pnpm run docker:test` | Lance les tests dans le conteneur Docker |
 | `pnpm run db:generate` | Génère le client Prisma |
 | `pnpm run db:migrate:dev` | Crée et applique une migration (développement) |
 | `pnpm run db:migrate:deploy` | Applique les migrations (production) |

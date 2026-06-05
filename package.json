@@ -18,6 +18,7 @@
     "docker:dev": "docker compose up --build",
     "docker:prod": "docker compose -f docker-compose.yaml up -d --build",
     "docker:down": "docker compose down",
+    "docker:test": "docker exec gamer_challenge_api pnpm run test",
     "test": "vitest",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
