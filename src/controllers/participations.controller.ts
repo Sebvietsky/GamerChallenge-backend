@@ -122,7 +122,7 @@ const controller = {
 
       const title = data.title as string;
 
-      data.slug = generateSlug(title, username);
+      data.slug = generateSlug(title);
     }
 
     if (req.user.role === UserRole.user) {
