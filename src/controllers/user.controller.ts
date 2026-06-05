@@ -180,6 +180,7 @@ const controller = {
       totalChallengeCreated,
       totalChallengeUserVoted,
       totalParticipationUserVoted,
+      totalVote: totalChallengeUserVoted + totalParticipationUserVoted,
       totalVoteReceivedOnChallenge,
       totalVoteReceivedOnParticipation,
       mostLikedChallenge,

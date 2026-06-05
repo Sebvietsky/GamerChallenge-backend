@@ -372,6 +372,7 @@ describe("User Controller", () => {
       expect(response.body).toHaveProperty("totalChallengeCreated", 1);
       expect(response.body).toHaveProperty("totalChallengeUserVoted", 1);
       expect(response.body).toHaveProperty("totalParticipationUserVoted", 0);
+      expect(response.body).toHaveProperty("totalVote", 1);
       expect(response.body).toHaveProperty("totalVoteReceivedOnChallenge", 1);
       expect(response.body).toHaveProperty("totalVoteReceivedOnParticipation", 0);
     });
