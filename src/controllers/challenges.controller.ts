@@ -280,12 +280,6 @@ const controller = {
       status,
     } = await createOneChallengeBodySchema.parseAsync(req.body);
 
-    const { username } = await prisma.user.findUniqueOrThrow({
-      where: {
-        id: req.user.id,
-      },
-    });
-
     const gameId = await findOrCreateGameFromIGDB(igdbId);
 
     await prisma.challenge.create({
@@ -339,12 +333,6 @@ const controller = {
 
     const { title, description, video } =
       await createOneParticipationWithinOneChallengeBodySchema.parseAsync(req.body);
-
-    const { username } = await prisma.user.findUniqueOrThrow({
-      where: {
-        id: req.user.id,
-      },
-    });
 
     await prisma.participation.create({
       data: {
