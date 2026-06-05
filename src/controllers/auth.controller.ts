@@ -112,7 +112,7 @@ const controller = {
       data: { password: newPasswordHashed },
     });
 
-    res.status(200).send({ message: "Password successfully updated." });
+    res.status(200).json({ message: "Password successfully updated." });
   },
 
   async logoutUser(req: Request, res: Response): Promise<void> {

@@ -67,7 +67,7 @@ const controller = {
       },
     };
 
-    res.status(200).send(response);
+    res.status(200).json(response);
   },
 
   /**
@@ -150,7 +150,7 @@ const controller = {
       });
     }
 
-    res.status(200).send({
+    res.status(200).json({
       message: "Participation successfully updated.",
     });
   },
