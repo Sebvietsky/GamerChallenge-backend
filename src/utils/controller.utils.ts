@@ -125,6 +125,7 @@ export const leaderboardParticipationSelectParams = {
           name: true,
           coverUrl: true,
         },
+        difficulty: { select: difficultySelectParams },
       },
     },
   },
