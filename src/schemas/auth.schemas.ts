@@ -28,6 +28,31 @@ export const resetPasswordBodySchema = z
     path: ["confirm"],
   });
 
+export const updateUserBodySchema = z
+  .object({
+    username: z
+      .string()
+      .min(2)
+      .optional()
+      .openapi({ description: "Pseudo unique, minimum 2 caractères" }),
+    email: z.email().optional().openapi({ example: "joueur@example.com" }),
+    country: z
+      .string()
+      .nullable()
+      .optional()
+      .openapi({ description: "Optionnel, null pour effacer" }),
+    bio: z.string().nullable().optional().openapi({ description: "Optionnel, null pour effacer" }),
+    profilePicture: z
+      .string()
+      .nullable()
+      .optional()
+      .openapi({ description: "URL de la photo de profil, null pour effacer" }),
+    visibility: z.boolean().optional().openapi({ description: "Visibilité du profil" }),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "At least one field must be provided",
+  });
+
 export const registerUserBodySchema = z
   .object({
     username: z
@@ -43,6 +68,9 @@ export const registerUserBodySchema = z
       .string()
       .optional()
       .openapi({ description: "URL de la photo de profil (optionnel)" }),
+    acceptCgu: z
+      .literal(true)
+      .openapi({ description: "Doit être à true pour valider l'inscription" }),
   })
   // https://v3.zod.dev/?id=refine
   .refine((data) => data.password === data.confirm, {

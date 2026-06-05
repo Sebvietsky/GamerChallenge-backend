@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "users" ADD COLUMN     "cgu_accepted_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP;
