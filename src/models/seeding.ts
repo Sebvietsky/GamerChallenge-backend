@@ -3,11 +3,8 @@ import { hash } from "argon2";
 import { prisma } from "../lib/prisma.js";
 import { findOrCreateGameFromIGDB } from "../utils/game.utils.js";
 
-// ─── Config ───────────────────────────────────────────────────────────────────
-
 const USERS_COUNT = 20;
 
-// Trailers officiels YouTube pour les jeux du seeding
 const GAME_TRAILER_URLS = [
   "https://www.youtube.com/watch?v=E3Huy2cdih0", // Elden Ring – Launch Trailer
   "https://www.youtube.com/watch?v=IGdkA1mBqgI", // Dark Souls III – Opening Cinematic
@@ -21,8 +18,6 @@ const GAME_TRAILER_URLS = [
   "https://www.youtube.com/watch?v=AhN5npoJVfU", // Bloodborne – Launch Trailer
 ];
 const CHALLENGES_PER_GAME = 5;
-
-// ─── Reference data ───────────────────────────────────────────────────────────
 
 const CHALLENGE_CATEGORIES = [
   { name: "Speedrun", colorCode: "#FF4500" },
@@ -56,8 +51,6 @@ const GAMES = [
   { igdbId: 126459 },
 ];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function slugify(text: string): string {
   return text
     .toLowerCase()
@@ -90,8 +83,6 @@ function weightedPick<T>(weighted: { value: T; weight: number }[]): T {
   return weighted[weighted.length - 1]!.value;
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
-
 async function main() {
   console.log("🌱 Démarrage du seeding...\n");
 
@@ -109,20 +100,16 @@ async function main() {
   await prisma.gameCategory.deleteMany();
   console.log("🧹 Base de données nettoyée");
 
-  // ── Catégories de challenges ──────────────────────────────────────────────────
   const challengeCategories = await Promise.all(
     CHALLENGE_CATEGORIES.map((c) => prisma.challengeCategory.create({ data: c }))
   );
   console.log(`✅ ${challengeCategories.length} catégories de challenges créées`);
 
-  // ── Difficultés ───────────────────────────────────────────────────────────────
   const difficulties = await Promise.all(
     DIFFICULTIES.map((d) => prisma.difficulty.create({ data: d }))
   );
   console.log(`✅ ${difficulties.length} niveaux de difficulté créés`);
 
-  // ── Jeux (données réelles depuis IGDB) ────────────────────────────────────────
-  // Séquentiel pour éviter les race conditions sur l'upsert des GameCategory
   const gameIds: number[] = [];
   for (const g of GAMES) {
     gameIds.push(await findOrCreateGameFromIGDB(g.igdbId));
@@ -130,7 +117,6 @@ async function main() {
   const games = await prisma.game.findMany({ where: { id: { in: gameIds } } });
   console.log(`✅ ${games.length} jeux créés avec leurs catégories (IGDB)`);
 
-  // ── Utilisateurs ──────────────────────────────────────────────────────────────
   const hashedPassword = await hash("Password123!");
 
   const fixedUsers = await Promise.all([
@@ -190,7 +176,6 @@ async function main() {
     `✅ ${allUsers.length} utilisateurs créés (admin, moderator + ${fakerUsers.length} users)`
   );
 
-  // ── Challenges ────────────────────────────────────────────────────────────────
   const challengeSlugs = new Set<string>();
   const challengeStatusWeights = [
     { value: "active" as const, weight: 75 },
@@ -230,7 +215,6 @@ async function main() {
   }
   console.log(`✅ ${allChallenges.length} challenges créés`);
 
-  // ── Participations (uniquement sur les challenges active) ─────────────────────
   const activeChallenges = allChallenges.filter((c) => c.status === "active");
   const participationSlugs = new Set<string>();
   const participationPairs = new Set<string>();
@@ -267,7 +251,6 @@ async function main() {
   }
   console.log(`✅ ${allParticipations.length} participations créées`);
 
-  // ── Votes sur challenges ───────────────────────────────────────────────────────
   const challengeVotePairs = new Set<string>();
   let challengeVotesCount = 0;
 
@@ -284,7 +267,6 @@ async function main() {
   }
   console.log(`✅ ${challengeVotesCount} votes sur challenges créés`);
 
-  // ── Votes sur participations ──────────────────────────────────────────────────
   const participationVotePairs = new Set<string>();
   let participationVotesCount = 0;
 
@@ -303,7 +285,6 @@ async function main() {
   }
   console.log(`✅ ${participationVotesCount} votes sur participations créés`);
 
-  // ── Favoris ───────────────────────────────────────────────────────────────────
   const favoritePairs = new Set<string>();
   let favoritesCount = 0;
 

@@ -1,7 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
   provider = "prisma-client"
@@ -11,8 +8,6 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
-
-// ===== ENUMS =====
 
 enum UserRole {
   user
@@ -47,8 +42,6 @@ enum ParticipationStatus {
   @@map("participation_status")
 }
 
-// ===== MODELS =====
-
 model User {
   id             Int        @id @default(autoincrement())
   username       String     @unique @db.VarChar(50)
@@ -63,7 +56,6 @@ model User {
   createdAt      DateTime   @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt      DateTime   @updatedAt @map("updated_at") @db.Timestamptz()
 
-  // Relations
   challenges         Challenge[]
   participations     Participation[]
   favoriteChallenges UserFavoriteChallenge[]
@@ -86,7 +78,6 @@ model Game {
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz()
 
-  // Relations
   challenges Challenge[]
   categories GameHasGameCategory[]
 
@@ -98,7 +89,6 @@ model GameCategory {
   name      String   @unique @db.VarChar(100)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
-  // Relations
   games GameHasGameCategory[]
 
   @@map("games_categories")
@@ -122,7 +112,6 @@ model ChallengeCategory {
   colorCode String?  @map("color_code") @db.VarChar(7)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
-  // Relations
   challenges Challenge[]
 
   @@map("challenges_categories")
@@ -134,7 +123,6 @@ model Difficulty {
   colorCode String?  @map("color_code") @db.VarChar(7)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
-  // Relations
   challenges Challenge[]
 
   @@map("difficulty")
@@ -159,7 +147,6 @@ model Challenge {
   createdAt           DateTime        @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt           DateTime        @updatedAt @map("updated_at") @db.Timestamptz()
 
-  // Relations
   game              Game              @relation(fields: [gameId], references: [id], onDelete: Restrict)
   challengeCategory ChallengeCategory @relation(fields: [challengeCategoryId], references: [id], onDelete: Restrict)
   difficulty        Difficulty        @relation(fields: [difficultyId], references: [id], onDelete: Restrict)
@@ -186,7 +173,6 @@ model Participation {
   createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt      DateTime            @updatedAt @map("updated_at") @db.Timestamptz()
 
-  // Relations
   challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 

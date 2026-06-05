@@ -6,7 +6,6 @@ export async function setup() {
   const adapter = new PrismaPg({ connectionString: env.databaseUrl });
   const prisma = new PrismaClient({ adapter });
 
-  // Nettoyage complet dans l'ordre des dépendances FK avant de lancer les tests
   await prisma.participationVote.deleteMany();
   await prisma.participation.deleteMany();
   await prisma.challengeVote.deleteMany();

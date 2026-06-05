@@ -6,17 +6,9 @@ import argon2 from "argon2";
 import { UserRole } from "../lib/prisma";
 import { findOrCreateGameFromIGDB } from "../utils/game.utils";
 
-// ---------------------------------------------------------------------------
-// Mocks
-// ---------------------------------------------------------------------------
-
 vi.mock("../utils/game.utils", () => ({
   findOrCreateGameFromIGDB: vi.fn(),
 }));
-
-// ---------------------------------------------------------------------------
-// Shared fixtures
-// ---------------------------------------------------------------------------
 
 const VALID_PASSWORD = "Password123456!";
 
@@ -28,7 +20,6 @@ describe("Challenges Controller", () => {
   let accessToken: string;
 
   beforeEach(async () => {
-    // 1. Create a user
     const user = await prisma.user.create({
       data: {
         username: "testuser",
@@ -39,7 +30,6 @@ describe("Challenges Controller", () => {
     });
     userId = user.id;
 
-    // 2. Login to get token
     const loginRes = await request(app)
       .post("/api/auth/login")
       .send({ email: "test@example.com", password: VALID_PASSWORD });
@@ -52,7 +42,6 @@ describe("Challenges Controller", () => {
         : [];
     accessToken = cookies.find((c: string) => c.startsWith("accessToken=")) || "";
 
-    // 3. Create a game
     const game = await prisma.game.create({
       data: {
         name: "Test Game",
@@ -61,7 +50,6 @@ describe("Challenges Controller", () => {
     });
     gameId = game.id;
 
-    // 4. Create a category
     const category = await prisma.challengeCategory.create({
       data: {
         name: "Test Category",
@@ -69,7 +57,6 @@ describe("Challenges Controller", () => {
     });
     categoryId = category.id;
 
-    // 5. Create a difficulty
     const difficulty = await prisma.difficulty.create({
       data: {
         name: "Easy",
@@ -77,7 +64,6 @@ describe("Challenges Controller", () => {
     });
     difficultyId = difficulty.id;
 
-    // Setup mock
     vi.mocked(findOrCreateGameFromIGDB).mockResolvedValue(gameId);
   });
 

@@ -34,15 +34,7 @@ export const PaginationLeaderboardOutputSchema = z.object({
 
 export const QueryChallengeOutputSchema = z.object({
   search: z.string().trim().min(1).optional(),
-  /*
-    Certaines catégories contiennent des espaces (ex: "No Hit", "Score Attack").
-    Express décode automatiquement les query params reçus : %20 → espace, donc ça fonctionne
-    normalement dans un navigateur ou un vrai appel HTTP.
-    Attention dans les clients REST (Bruno, Postman, Insomnia) : il faut saisir la valeur
-    telle quelle ("No Hit") dans le champ dédié au paramètre, et laisser le client
-    gérer l'encodage. Écrire manuellement "No%20Hit" dans le champ provoque un double
-    encodage (%2520) et la validation Zod échoue.
-  */
+
   category: z
     .enum([
       "Speedrun",

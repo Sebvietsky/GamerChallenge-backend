@@ -1,10 +1,10 @@
-services: # Liste des serveurs
-  database: # Nom du service de la DB
+services: 
+  database: 
     container_name: gamer_challenge_db
-    image: postgres:18 # Image permettant de créer le conteneur
-    restart: unless-stopped # Redémarre automatiquement mon service en cas de crash (sauf s'il a été éteint manuellement)
+    image: postgres:18 
+    restart: unless-stopped 
     volumes:
-      - gamer_challenge_volume:/var/lib/postgresql # On monte un volume pour la persistence de donnée
+      - gamer_challenge_volume:/var/lib/postgresql 
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -36,15 +36,12 @@ services: # Liste des serveurs
       database:
         condition: service_healthy
     networks:
-      - default      # Réseau interne au backend : permet à l'API de joindre la base de données
-      - gamer_network # Réseau partagé avec le frontend : sans cela, définir un réseau explicite retirerait l'API du réseau default et casserait la connexion DB
+      - default      
+      - gamer_network 
 
-# La database n'a pas de réseau explicite : elle reste sur default automatiquement
-# Elle n'a pas besoin de gamer_network car le frontend ne doit jamais lui parler directement
-
-volumes: # Liste de nos volumes
-  gamer_challenge_volume: # Volume pour la persistance des données de la DB
+volumes: 
+  gamer_challenge_volume: 
 
 networks:
   gamer_network:
-    name: gamer_network # Force le nom exact sans préfixe — le frontend peut le rejoindre en external: true
+    name: gamer_network 

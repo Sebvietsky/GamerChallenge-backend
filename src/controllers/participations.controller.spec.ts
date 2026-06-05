@@ -18,7 +18,6 @@ describe("Participations Controller", () => {
   let adminAccessToken: string;
 
   beforeEach(async () => {
-    // 1. Create users
     const user = await prisma.user.create({
       data: {
         username: "testuser",
@@ -48,7 +47,6 @@ describe("Participations Controller", () => {
       },
     });
 
-    // 2. Login to get tokens
     const loginRes = await request(app)
       .post("/api/auth/login")
       .send({ email: "test@example.com", password: VALID_PASSWORD });
@@ -73,7 +71,6 @@ describe("Participations Controller", () => {
         : [];
     adminAccessToken = adminCookies.find((c: string) => c.startsWith("accessToken=")) || "";
 
-    // 3. Create a game and category
     const gameCategory = await prisma.gameCategory.create({
       data: { name: "Action" },
     });
@@ -91,7 +88,6 @@ describe("Participations Controller", () => {
     });
     gameId = game.id;
 
-    // 4. Create a category
     const category = await prisma.challengeCategory.create({
       data: {
         name: "Test Category",
@@ -99,7 +95,6 @@ describe("Participations Controller", () => {
     });
     categoryId = category.id;
 
-    // 5. Create a difficulty
     const difficulty = await prisma.difficulty.create({
       data: {
         name: "Easy",
@@ -107,7 +102,6 @@ describe("Participations Controller", () => {
     });
     difficultyId = difficulty.id;
 
-    // 6. Create a challenge
     const challenge = await prisma.challenge.create({
       data: {
         title: "Test Challenge",
@@ -225,8 +219,7 @@ describe("Participations Controller", () => {
       const dbParticipation = await prisma.participation.findFirst({
         where: { title: "Updated Title" },
       });
-      // Title should be updated, slug now contains admin/user part (as before) or UUID (if not username)
-      // The current controller logic for PATCH still uses username if provided
+
       expect(dbParticipation?.title).toBe("Updated Title");
       expect(dbParticipation?.slug).toBeTruthy();
     });

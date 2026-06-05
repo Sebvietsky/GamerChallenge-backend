@@ -44,7 +44,7 @@ export const registerUserBodySchema = z
       .optional()
       .openapi({ description: "URL de la photo de profil (optionnel)" }),
   })
-  // https://v3.zod.dev/?id=refine
+
   .refine((data) => data.password === data.confirm, {
     message: "Passwords don't match",
     path: ["confirm"], // l'erreur sera attachée à ce champ

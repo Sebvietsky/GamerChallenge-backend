@@ -29,7 +29,7 @@ router.delete(
   checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),
   controller.deleteOne
 );
-// Favorites & Likes
+
 router.post(
   "/:slug/likes",
   checkRoles([UserRole.admin, UserRole.moderator, UserRole.user]),

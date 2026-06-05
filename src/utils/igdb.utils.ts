@@ -31,14 +31,6 @@ async function getAccessToken(): Promise<string> {
   return tokenCache.accessToken;
 }
 
-// Envoie une requête à un endpoint IGDB (ex: "games", "platforms", "covers"...).
-// Le body est une chaîne au format Apicalypse (langage de requête propriétaire d'IGDB) :
-//   fields name, cover.url, platforms.name;
-//   search "Elden Ring";
-//   where version_parent = null;
-//   limit 10;
-// T correspond à la forme de la réponse attendue selon l'endpoint interrogé.
-// Actuellement utilisé uniquement avec l'endpoint "games" → T = IGDBGame[].
 export async function queryIGDB<T>(endpoint: string, body: string): Promise<T> {
   const accessToken = await getAccessToken();
 
@@ -59,14 +51,6 @@ export async function queryIGDB<T>(endpoint: string, body: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-// IGDB retourne les URLs d'image sous une forme incomplète, par exemple :
-//   //images.igdb.com/igdb/image/upload/t_thumb/co4jni.jpg
-//
-// Deux problèmes à corriger :
-//   1. L'URL commence par "//" sans protocole → on ajoute "https:" devant
-//   2. Le segment de taille (ex: "t_thumb") → on le remplace par la taille voulue
-//
-// Tailles disponibles : https://api-docs.igdb.com/#images
 export function buildImageUrl(
   url: string,
   size: "cover_big" | "thumb" | "screenshot_huge" | "1080p" | "original" = "cover_big"

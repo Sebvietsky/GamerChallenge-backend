@@ -34,25 +34,13 @@ const SINCE_DAYS: Record<NonNullable<FindBestForHomePageQueryParams["since"]>, n
 };
 
 const controller = {
-  // GET /home?sortBy=Like&Since=""
   async findBest(req: Request, res: Response): Promise<void> {
     const { since, limit, sortBy }: FindBestForHomePageQueryParams =
       await FindBestForHomePageQuerySchema.parseAsync(req.query);
 
-    /*
-      Convertit le paramètre `since` en date de début de période.
-      Sans `since`, sinceDate reste undefined et aucun filtre de date n'est appliqué (all time).
-    */
-
     const sinceDate = since
       ? new Date(Date.now() - SINCE_DAYS[since] * 24 * 60 * 60 * 1000)
       : undefined;
-
-    /*
-      Mappe `sortBy` vers la clause Prisma correspondante.
-      votes/participations trient par _count (nombre de relations),
-      createdAt trie directement sur le champ scalaire.
-    */
 
     const ORDER_BY_MAP: Record<
       NonNullable<FindBestForHomePageQueryParams["sortBy"]>,
@@ -72,7 +60,6 @@ const controller = {
       take: limit,
     });
 
-    // Aplatit les catégories de jeu : [{ category: { name } }] → [name]
     const response = challenges.map((chall) => ({
       ...chall,
       game: {
@@ -84,7 +71,6 @@ const controller = {
     res.status(200).json({ data: response });
   },
 
-  // GET /challenges
   async findAll(req: Request, res: Response): Promise<void> {
     const { page, limit }: PaginationParams = await PaginationOutputSchema.parseAsync(req.query);
     const {
@@ -116,12 +102,6 @@ const controller = {
       }),
       ...(status && { status }),
 
-      /*
-        Filtre par date de fermeture. Les challenges dont closesAt est NULL (sans date de fin)
-        sont exclus dès qu'un filtre de date est appliqué — ils apparaissent dans le listing général.
-        gte = "greater than or equal" (supérieur ou égal), lte = "less than or equal" (inférieur ou égal).
-      */
-
       ...((closesAfter || closesBefore) && {
         closesAt: {
           ...(closesAfter && { gte: closesAfter }),
@@ -130,30 +110,8 @@ const controller = {
       }),
     };
 
-    /*
-      votes et participations ne sont pas des champs directs sur Challenge mais des relations (tableaux).
-      Prisma ne peut pas trier directement par une relation — il faut lui dire de trier par leur nombre
-      avec { _count: sort }. COUNT_FIELDS sert à identifier ces deux cas pour leur appliquer ce format.
-    */
     const COUNT_FIELDS = ["votes", "participations"] as const;
 
-    /*
-      Selon le champ demandé, Prisma attend trois formats différents :
-        - Champ simple (title, status…)   → { title: "asc" }
-        - Relation comptée (votes…)        → { votes: { _count: "desc" } }
-        - Champ nullable (closesAt)        → { closesAt: { sort: "desc", nulls: "last" } }
-
-      Pour votes/participations : COUNT_FIELDS.includes() vérifie si orderBy est l'un des deux.
-      Le cast `as (typeof COUNT_FIELDS)[number]` est nécessaire car TypeScript ne sait pas
-      qu'un string quelconque peut être comparé aux valeurs littérales du tableau — ce cast
-      lui précise que orderBy est forcément "votes" | "participations" dans ce contexte.
-
-      Pour closesAt : seul ce champ est nullable, donc seul lui a besoin de nulls: "last".
-      Sans ça, PostgreSQL place les NULL en premier lors d'un tri DESC, ce qui ferait remonter
-      les challenges sans date de fermeture avant tous les autres.
-
-      Par défaut (pas d'orderBy) : tri par date de création décroissante, les plus récents en premier.
-    */
     const orderByClause: Prisma.ChallengeOrderByWithRelationInput = orderBy
       ? COUNT_FIELDS.includes(orderBy as (typeof COUNT_FIELDS)[number])
         ? { [orderBy]: { _count: sort } }
@@ -191,7 +149,6 @@ const controller = {
     });
   },
 
-  // GET /challenges/:slug
   async findOne(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
 
@@ -215,7 +172,6 @@ const controller = {
     res.status(200).send(response);
   },
 
-  // GET /challenges/:slug/participations
   async findAllParticipationsWithinOneChallenge(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
 
@@ -254,18 +210,6 @@ const controller = {
     });
   },
 
-  // POST /challenges
-  /*
-    title               String          @db.VarChar(200) => Dans le body
-    description         String          @db.Text
-    hints               String?         @db.Text
-    demo                String?         @db.VarChar(255)
-    goals               String?         @db.Text
-    closesAt            DateTime?       @map("closes_at") @db.Timestamptz()
-    gameId              Int             @map("game_id")
-    challengeCategoryId Int             @map("challenge_category_id")
-    difficultyId        Int             @map("difficulty_id")
-  */
   async createOne(req: Request, res: Response) {
     const {
       title,
@@ -320,14 +264,6 @@ const controller = {
     });
   },
 
-  // POST /challenges/:slug/participations
-  /*
-    video          String              @db.VarChar(255)
-    title          String              @db.VarChar(200)
-    description    String?             @db.Text
-    challengeId    Int                 @map("challenge_id")
-    userId         Int                 @map("user_id")
-  */
   async createOneParticipationWithinOneChallenge(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
 
@@ -358,7 +294,6 @@ const controller = {
     });
   },
 
-  // PATCH /challenges/:slug
   async updateOne(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
 
@@ -386,7 +321,6 @@ const controller = {
     });
   },
 
-  // DELETE /challenges/:slug
   async deleteOne(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
 
@@ -399,7 +333,6 @@ const controller = {
     res.status(204).end();
   },
 
-  // POST /challenges/:slug/likes
   async userLikeChallenge(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
     console.log(slug);
@@ -421,7 +354,6 @@ const controller = {
     res.status(201).json({ message: "Challenge liked success" });
   },
 
-  // DELETE /challenges/:slug/likes
   async userUnlikeChallenge(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
 
@@ -437,7 +369,6 @@ const controller = {
     res.status(204).end();
   },
 
-  // POST /challenges/:slug/favorites
   async userAddChallengeToFavorites(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
 
@@ -459,7 +390,6 @@ const controller = {
     res.status(201).json({ message: "Challenge add to favorite" });
   },
 
-  // DELETE /challenges/:slug/favorites
   async userDeleteChallengeFromHisFavorites(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
 

@@ -15,27 +15,13 @@ import {
 import { UnauthorizedError } from "../lib/errors";
 import type { SafeUserResponse } from "../lib/interface";
 
-/**
- * Authentication controller handling user-related actions
- */
-
 const controller = {
-  /**
-   * Handles user registration
-   * @param req - Express request object
-   * @param res - Express response object
-   */
   async registerUser(req: Request, res: Response): Promise<void> {
-    // Validate and parse request body
     const { username, email, password, country, bio, profilePicture } =
       await registerUserBodySchema.parseAsync(req.body);
 
-    // Hash password before saving
     const passwordHash = await argon2.hash(password);
 
-    // Create the new user in the database
-    // Error managed by globalErrorHandler
-    // If user already exists prisma.error P2002 = unique constaint violated
     await prisma.user.create({
       data: {
         username,
@@ -74,7 +60,7 @@ const controller = {
     const token = req.cookies?.refreshToken;
 
     if (!token) throw new UnauthorizedError("Refresh token not provided");
-    // au choix, on peut récupérer l'id du propriétaire du token dans le payload ou dans la db
+
     const existingToken = await prisma.refreshToken.findFirst({
       where: { token },
       include: { user: true },

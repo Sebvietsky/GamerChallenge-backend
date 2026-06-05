@@ -4,10 +4,6 @@ import argon2 from "argon2";
 import { prisma } from "../lib/prisma";
 import { app } from "../app";
 
-// ---------------------------------------------------------------------------
-// Shared fixtures
-// ---------------------------------------------------------------------------
-
 const VALID_PASSWORD = "M0n ch@t s appelle D0nut";
 
 interface UserBody {
@@ -19,10 +15,6 @@ interface UserBody {
   country: string;
   profilePicture: string;
 }
-
-// ---------------------------------------------------------------------------
-// [POST] /auth/register
-// ---------------------------------------------------------------------------
 
 describe("[POST] /auth/register", () => {
   const USER: UserBody = {
@@ -193,10 +185,6 @@ describe("[POST] /auth/register", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// [POST] /auth/login
-// ---------------------------------------------------------------------------
-
 describe("[POST] /auth/login", () => {
   const USER_EMAIL = "carl@dungeoncrawl.com";
 
@@ -292,10 +280,6 @@ describe("[POST] /auth/login", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// [POST] /auth/refresh
-// ---------------------------------------------------------------------------
-
 describe("[POST] /auth/refresh", () => {
   const USER_EMAIL = "carl@dungeoncrawl.com";
 
@@ -313,7 +297,6 @@ describe("[POST] /auth/refresh", () => {
     await prisma.user.deleteMany({ where: { email: USER_EMAIL } });
   });
 
-  /** Helper: login and return the refreshToken cookie string */
   async function loginAndGetRefreshCookie(): Promise<string> {
     const loginRes = await request(app)
       .post("/api/auth/login")
@@ -419,10 +402,6 @@ describe("[POST] /auth/refresh", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// [POST] /auth/resetPassword
-// ---------------------------------------------------------------------------
-
 describe("[POST] /auth/resetPassword", () => {
   const USER_EMAIL = "reset@dungeoncrawl.com";
   const NEW_PASSWORD = "NouveauM0tDeP@sse123!";
@@ -441,7 +420,6 @@ describe("[POST] /auth/resetPassword", () => {
     await prisma.user.deleteMany({ where: { email: USER_EMAIL } });
   });
 
-  /** Helper: login and return the accessToken cookie string */
   async function loginAndGetAccessCookie(): Promise<string> {
     const loginRes = await request(app)
       .post("/api/auth/login")
@@ -537,10 +515,6 @@ describe("[POST] /auth/resetPassword", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// [POST] /auth/logout
-// ---------------------------------------------------------------------------
-
 describe("[POST] /auth/logout", () => {
   const USER_EMAIL = "carl@dungeoncrawl.com";
 
@@ -558,7 +532,6 @@ describe("[POST] /auth/logout", () => {
     await prisma.user.deleteMany({ where: { email: USER_EMAIL } });
   });
 
-  /** Helper: login and return the accessToken cookie string */
   async function loginAndGetAccessCookie(): Promise<string> {
     const loginRes = await request(app)
       .post("/api/auth/login")
@@ -640,10 +613,6 @@ describe("[POST] /auth/logout", () => {
     expect(response.status).toBe(401);
   });
 });
-
-// ---------------------------------------------------------------------------
-// [GET] /auth/me
-// ---------------------------------------------------------------------------
 
 describe("[GET] /auth/me", () => {
   const USER_EMAIL = "carl@dungeoncrawl.com";

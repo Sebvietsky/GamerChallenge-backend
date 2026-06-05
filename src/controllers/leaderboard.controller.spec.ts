@@ -62,10 +62,6 @@ describe("Leaderboard Controller", () => {
     await prisma.difficulty.deleteMany();
   });
 
-  // ---------------------------------------------------------------------------
-  // GET /api/leaderboard/bestChallenges
-  // ---------------------------------------------------------------------------
-
   describe("GET /api/leaderboard/bestChallenges", () => {
     test("should return 200 with paginated response", async () => {
       await prisma.challenge.create({
@@ -263,10 +259,6 @@ describe("Leaderboard Controller", () => {
       expect(item._count).toHaveProperty("participations");
     });
   });
-
-  // ---------------------------------------------------------------------------
-  // GET /api/leaderboard/bestParticipations
-  // ---------------------------------------------------------------------------
 
   describe("GET /api/leaderboard/bestParticipations", () => {
     test("should return 200 with paginated response", async () => {
@@ -541,10 +533,6 @@ describe("Leaderboard Controller", () => {
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // GET /api/leaderboard/bestActivUsers
-  // ---------------------------------------------------------------------------
-
   describe("GET /api/leaderboard/bestActivUsers", () => {
     test("should return 200 with paginated response", async () => {
       await prisma.challenge.create({
@@ -578,7 +566,6 @@ describe("Leaderboard Controller", () => {
         },
       });
 
-      // testuser: 2 challenges + 1 participation = 3 total
       const c1 = await prisma.challenge.create({
         data: {
           title: "Challenge A",
@@ -612,7 +599,6 @@ describe("Leaderboard Controller", () => {
         },
       });
 
-      // lessactive: 1 challenge = 1 total
       await prisma.challenge.create({
         data: {
           title: "Challenge C",
@@ -635,7 +621,6 @@ describe("Leaderboard Controller", () => {
     });
 
     test("should not include users with zero activity", async () => {
-      // activeuser has activity, testuser does not
       const activeUser = await prisma.user.create({
         data: {
           username: "activeuser",
@@ -702,7 +687,6 @@ describe("Leaderboard Controller", () => {
         },
       });
 
-      // testuser creates 1 challenge and participates in 2 others
       const ownChallenge = await prisma.challenge.create({
         data: {
           title: "Count Challenge",
@@ -760,7 +744,6 @@ describe("Leaderboard Controller", () => {
         ],
       });
 
-      // suppress unused variable warning
       void ownChallenge;
 
       const res = await request(app)
@@ -775,7 +758,6 @@ describe("Leaderboard Controller", () => {
     });
 
     test("should only count recent activity when since is set", async () => {
-      // testuser: 1 old challenge + 1 recent participation
       await prisma.challenge.create({
         data: {
           title: "Old User Challenge",
@@ -819,7 +801,7 @@ describe("Leaderboard Controller", () => {
       expect(res.status).toBe(200);
       const user = res.body.data.find((u: { username: string }) => u.username === "testuser");
       expect(user).toBeDefined();
-      // old challenge is excluded from the count
+
       expect(user.challengeCount).toBe(1);
       expect(user.participationCount).toBe(1);
       expect(user.totalActivity).toBe(2);
@@ -835,7 +817,6 @@ describe("Leaderboard Controller", () => {
         },
       });
 
-      // testuser: recent challenge
       await prisma.challenge.create({
         data: {
           title: "Recent Challenge",
@@ -848,7 +829,6 @@ describe("Leaderboard Controller", () => {
         },
       });
 
-      // oldactive: old challenge only
       await prisma.challenge.create({
         data: {
           title: "Old Challenge",
