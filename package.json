@@ -14,7 +14,7 @@
     "db:reset": "pnpm run db:migrate:reset && pnpm run db:seed",
     "db:studio": "prisma studio --browser none",
     "dev": "tsx watch src/server.ts",
-    "docker:start": "pnpm run db:migrate:deploy && pnpm run start",
+    "docker:start": "pnpm run db:migrate:deploy && pnpm run db:seed && pnpm run start",
     "docker:dev": "docker compose up --build",
     "docker:prod": "docker compose -f docker-compose.yaml up -d --build",
     "docker:down": "docker compose down",
