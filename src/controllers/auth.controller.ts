@@ -129,12 +129,9 @@ const controller = {
     });
   },
 
-  // RGPD — droit de rectification
   async updateUser(req: Request, res: Response): Promise<void> {
     const body = await updateUserBodySchema.parseAsync(req.body);
 
-    // Le type inféré par Zod ne correspond pas exactement à UserUpdateInput de Prisma,
-    // mais le schema garantit que seuls des champs autorisés sont présents.
     const data = body as Prisma.UserUncheckedUpdateInput;
 
     const updatedUser = await prisma.user.update({
@@ -159,7 +156,6 @@ const controller = {
     });
   },
 
-  // RGPD — droit à la portabilité : retourne toutes les données personnelles sans le mot de passe
   async exportUser(req: Request, res: Response): Promise<void> {
     const user = await prisma.user.findUniqueOrThrow({
       where: { id: req.user.id },
@@ -207,19 +203,15 @@ const controller = {
       },
     });
 
-    // Déclenche le téléchargement du fichier côté client à l'appel de la route
     res
       .setHeader("Content-Disposition", `attachment; filename="export-${user.username}.json"`)
       .status(200)
       .json(user);
   },
 
-  // RGPD — droit à l'effacement
   async deleteUser(req: Request, res: Response): Promise<void> {
     const userId = req.user.id;
 
-    // Challenge a onDelete: Restrict sur User — il faut supprimer les challenges en premier.
-    // La transaction garantit qu'aucune suppression partielle n'est possible en cas d'erreur.
     await prisma.$transaction([
       prisma.challenge.deleteMany({ where: { userId } }),
       prisma.user.delete({ where: { id: userId } }),

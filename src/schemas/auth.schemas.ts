@@ -75,5 +75,5 @@ export const registerUserBodySchema = z
 
   .refine((data) => data.password === data.confirm, {
     message: "Passwords don't match",
-    path: ["confirm"], // l'erreur sera attachée à ce champ
+    path: ["confirm"],
   });

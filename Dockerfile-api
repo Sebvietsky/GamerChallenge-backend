@@ -16,4 +16,4 @@ RUN pnpm run db:generate
 
 RUN pnpm run build
 
-CMD ["pnpm", "run", "docker:start"]
+CMD ["pnpm", "run", "db:migrate:deploy"]

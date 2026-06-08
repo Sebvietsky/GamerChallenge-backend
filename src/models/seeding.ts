@@ -6,16 +6,16 @@ import { findOrCreateGameFromIGDB } from "../utils/game.utils.js";
 const USERS_COUNT = 20;
 
 const GAME_TRAILER_URLS = [
-  "https://www.youtube.com/watch?v=E3Huy2cdih0", // Elden Ring – Launch Trailer
-  "https://www.youtube.com/watch?v=IGdkA1mBqgI", // Dark Souls III – Opening Cinematic
-  "https://www.youtube.com/watch?v=zw47_q9wbBE", // Zelda: Breath of the Wild – E3 2016
-  "https://www.youtube.com/watch?v=e_E9W2vsRbQ", // Valorant – Official Gameplay Trailer
-  "https://www.youtube.com/watch?v=2gUtfBmw86Y", // Fortnite – Season 1 Trailer
-  "https://www.youtube.com/watch?v=MmB9b5njVbA", // Minecraft – Official Trailer
-  "https://www.youtube.com/watch?v=BKQMWMdQwEI", // League of Legends – Season Cinematic
-  "https://www.youtube.com/watch?v=UAO2urG23S4", // Hollow Knight – Release Trailer
-  "https://www.youtube.com/watch?v=rXMX4YJ7Lks", // Sekiro – Official Gameplay Trailer
-  "https://www.youtube.com/watch?v=AhN5npoJVfU", // Bloodborne – Launch Trailer
+  "https://www.youtube.com/watch?v=E3Huy2cdih0",
+  "https://www.youtube.com/watch?v=IGdkA1mBqgI",
+  "https://www.youtube.com/watch?v=zw47_q9wbBE",
+  "https://www.youtube.com/watch?v=e_E9W2vsRbQ",
+  "https://www.youtube.com/watch?v=2gUtfBmw86Y",
+  "https://www.youtube.com/watch?v=MmB9b5njVbA",
+  "https://www.youtube.com/watch?v=BKQMWMdQwEI",
+  "https://www.youtube.com/watch?v=UAO2urG23S4",
+  "https://www.youtube.com/watch?v=rXMX4YJ7Lks",
+  "https://www.youtube.com/watch?v=AhN5npoJVfU",
 ];
 const CHALLENGES_PER_GAME = 5;
 

@@ -45,7 +45,7 @@ describe("Challenges Controller", () => {
     const game = await prisma.game.create({
       data: {
         name: "Test Game",
-        igdbId: 12345, // Adding it back as reset should have fixed it
+        igdbId: 12345,
       },
     });
     gameId = game.id;

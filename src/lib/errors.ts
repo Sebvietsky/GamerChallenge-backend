@@ -4,7 +4,7 @@ export class HttpClientError extends Error {
 
   constructor(message: string, { status }: { status: number }) {
     super(message);
-    this.name = this.constructor.name; // Petit bonus pour retrouver le nom de la classe depuis le contructor
+    this.name = this.constructor.name;
     this.status = status;
   }
 }
