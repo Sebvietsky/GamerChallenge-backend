@@ -171,7 +171,7 @@ describe("[GET] /games/search", () => {
       {
         id: 2,
         name: "Banner Game",
-        artworks: [{ url: "//images.igdb.com/igdb/image/upload/t_thumb/art001.jpg" }],
+        artworks: [{ url: "//images.igdb.com/igdb/image/upload/t_screenshot_huge/art001.jpg" }],
       },
     ]);
 
@@ -179,7 +179,9 @@ describe("[GET] /games/search", () => {
     const first = response.body.data[0];
 
     expect(first.bannerUrl).not.toBeNull();
-    expect(first.bannerUrl).toMatch(/^https:\/\//);
+    expect(first.bannerUrl).toMatch(
+      /^https:\/\/images.igdb.com\/igdb\/image\/upload\/t_screenshot_huge\/.*\.jpg$/
+    );
   });
 
   test("should fallback bannerUrl to screenshot if no artwork", async () => {
