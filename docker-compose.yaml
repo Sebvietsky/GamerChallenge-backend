@@ -1,10 +1,10 @@
-services: 
-  database: 
+services:
+  database:
     container_name: gamer_challenge_db
-    image: postgres:18 
-    restart: unless-stopped 
+    image: postgres:18
+    restart: unless-stopped
     volumes:
-      - gamer_challenge_volume:/var/lib/postgresql 
+      - gamer_challenge_volume:/var/lib/postgresql
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -29,6 +29,9 @@ services:
       NODE_ENV: ${NODE_ENV}
       JWT_SECRET: ${JWT_SECRET}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      IGDB_CLIENT_ID: ${IGDB_CLIENT_ID}
+      IGDB_CLIENT_SECRET: ${IGDB_CLIENT_SECRET}
+
     ports:
       - ${API_LOCAL_PORT}:${PORT}
       - 51212:51212
@@ -36,12 +39,12 @@ services:
       database:
         condition: service_healthy
     networks:
-      - default      
-      - gamer_network 
+      - default
+      - gamer_network
 
-volumes: 
-  gamer_challenge_volume: 
+volumes:
+  gamer_challenge_volume:
 
 networks:
   gamer_network:
-    name: gamer_network 
+    name: gamer_network

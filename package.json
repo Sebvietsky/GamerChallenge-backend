@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node dist/src/server.js",
-    "build": "tsc",
+    "build": "tsup src/server.ts --format esm",
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:migrate:reset": "prisma migrate reset --force",
@@ -54,6 +54,7 @@
     "lint-staged": "^17.0.7",
     "prettier": "^3.8.3",
     "supertest": "^7.2.2",
+    "tsup": "^8.5.1",
     "tsx": "^4.22.3",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.60.0",
