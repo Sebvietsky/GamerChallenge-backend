@@ -156,7 +156,7 @@ describe("[GET] /games/search", () => {
       {
         id: 2,
         name: "Banner Game",
-        artworks: [{ url: "//images.igdb.com/igdb/image/upload/t_thumb/art001.jpg" }],
+        artworks: [{ url: "//images.igdb.com/igdb/image/upload/t_screenshot_huge/art001.jpg" }],
       },
     ]);
 
