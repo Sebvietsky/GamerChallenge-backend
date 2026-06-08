@@ -169,7 +169,7 @@ const controller = {
       },
     };
 
-    res.status(200).send(response);
+    res.status(200).json(response);
   },
 
   async findAllParticipationsWithinOneChallenge(req: Request, res: Response) {
@@ -259,7 +259,7 @@ const controller = {
       },
     });
 
-    res.status(201).send({
+    res.status(201).json({
       message: "Challenge successfully created.",
     });
   },
@@ -289,7 +289,7 @@ const controller = {
       },
     });
 
-    res.status(201).send({
+    res.status(201).json({
       message: "Participation successfully created.",
     });
   },
@@ -316,7 +316,7 @@ const controller = {
       data,
     });
 
-    res.status(200).send({
+    res.status(200).json({
       message: "Challenge successfully updated.",
     });
   },

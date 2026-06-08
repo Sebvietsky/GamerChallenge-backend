@@ -55,6 +55,7 @@ model User {
   status         UserStatus @default(active)
   createdAt      DateTime   @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt      DateTime   @updatedAt @map("updated_at") @db.Timestamptz()
+  cguAcceptedAt  DateTime   @default(now()) @map("cgu_accepted_at") @db.Timestamptz()
 
   challenges         Challenge[]
   participations     Participation[]

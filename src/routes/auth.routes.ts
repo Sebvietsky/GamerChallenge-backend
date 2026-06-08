@@ -23,5 +23,19 @@ router.get(
   checkRoles([UserRole.user, UserRole.moderator, UserRole.admin]),
   controller.getConnectedUser
 );
-
+router.get(
+  "/me/export",
+  checkRoles([UserRole.user, UserRole.moderator, UserRole.admin]),
+  controller.exportUser
+);
+router.patch(
+  "/me",
+  checkRoles([UserRole.user, UserRole.moderator, UserRole.admin]),
+  controller.updateUser
+);
+router.delete(
+  "/me",
+  checkRoles([UserRole.user, UserRole.moderator, UserRole.admin]),
+  controller.deleteUser
+);
 export default router;

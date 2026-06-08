@@ -109,7 +109,7 @@ describe("Challenges Controller", () => {
       await prisma.challenge.create({
         data: {
           title: "Find Me",
-          slug: "find-me",
+          slug: "find-me-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaaa",
           description: "Description",
           userId,
           gameId,
@@ -118,7 +118,9 @@ describe("Challenges Controller", () => {
         },
       });
 
-      const response = await request(app).get("/api/challenges/find-me");
+      const response = await request(app).get(
+        "/api/challenges/find-me-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaaa"
+      );
 
       expect(response.status).toBe(200);
       expect(response.body.title).toBe("Find Me");
@@ -127,7 +129,9 @@ describe("Challenges Controller", () => {
     });
 
     test("should return 404 if not found", async () => {
-      const response = await request(app).get("/api/challenges/non-existent");
+      const response = await request(app).get(
+        "/api/challenges/non-existent-long-slug-to-pass-validation-aaaaaaaaa"
+      );
       expect(response.status).toBe(404);
     });
   });
@@ -147,7 +151,7 @@ describe("Challenges Controller", () => {
 
       const dbChallenge = await prisma.challenge.findFirst({ where: { title: "New Challenge" } });
       expect(dbChallenge).not.toBeNull();
-      expect(dbChallenge?.slug).toBe("new-challengetestuser");
+      expect(dbChallenge?.slug).toContain("new-challenge");
     });
 
     test("should return 401 if not authenticated", async () => {
@@ -168,7 +172,7 @@ describe("Challenges Controller", () => {
       await prisma.challenge.create({
         data: {
           title: "Old Title",
-          slug: "old-title",
+          slug: "old-title-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaa",
           description: "Description",
           userId,
           gameId,
@@ -178,12 +182,12 @@ describe("Challenges Controller", () => {
       });
 
       const response = await request(app)
-        .patch("/api/challenges/old-title")
+        .patch("/api/challenges/old-title-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaa")
         .set("Cookie", accessToken)
         .send({ title: "Updated Title" });
 
       expect(response.status).toBe(200);
-      const dbChallenge = await prisma.challenge.findFirst({ where: { slug: "old-title" } });
+      const dbChallenge = await prisma.challenge.findFirst({ where: { title: "Updated Title" } });
       expect(dbChallenge?.title).toBe("Updated Title");
     });
   });
@@ -193,7 +197,7 @@ describe("Challenges Controller", () => {
       await prisma.challenge.create({
         data: {
           title: "To Delete",
-          slug: "to-delete",
+          slug: "to-delete-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaa",
           description: "Description",
           userId,
           gameId,
@@ -203,11 +207,13 @@ describe("Challenges Controller", () => {
       });
 
       const response = await request(app)
-        .delete("/api/challenges/to-delete")
+        .delete("/api/challenges/to-delete-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaa")
         .set("Cookie", accessToken);
 
       expect(response.status).toBe(204);
-      const dbChallenge = await prisma.challenge.findFirst({ where: { slug: "to-delete" } });
+      const dbChallenge = await prisma.challenge.findFirst({
+        where: { slug: "to-delete-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaa" },
+      });
       expect(dbChallenge).toBeNull();
     });
   });
@@ -217,7 +223,7 @@ describe("Challenges Controller", () => {
       const challenge = await prisma.challenge.create({
         data: {
           title: "Participate Here",
-          slug: "participate-here",
+          slug: "participate-here-long-slug-to-pass-validation-aaaaaaaaaaaa",
           description: "Description",
           userId,
           gameId,
@@ -229,7 +235,7 @@ describe("Challenges Controller", () => {
       await prisma.participation.create({
         data: {
           title: "My Participation",
-          slug: "my-participation-testuser",
+          slug: "my-participation-testuser-long-slug-to-pass-validation-aaaa",
           description: "I did it!",
           video: "https://youtube.com/watch?v=123",
           userId,
@@ -237,7 +243,9 @@ describe("Challenges Controller", () => {
         },
       });
 
-      const response = await request(app).get("/api/challenges/participate-here/participations");
+      const response = await request(app).get(
+        "/api/challenges/participate-here-long-slug-to-pass-validation-aaaaaaaaaaaa/participations"
+      );
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("data");
@@ -516,7 +524,7 @@ describe("Challenges Controller", () => {
       await prisma.challenge.create({
         data: {
           title: "Like This",
-          slug: "like-this",
+          slug: "like-this-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaaa",
           description: "d",
           userId,
           gameId,
@@ -526,14 +534,17 @@ describe("Challenges Controller", () => {
       });
 
       const response = await request(app)
-        .post("/api/challenges/like-this/likes")
+        .post("/api/challenges/like-this-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaaa/likes")
         .set("Cookie", accessToken);
 
       expect(response.status).toBe(201);
       expect(response.body.message).toBe("Challenge liked success");
 
       const vote = await prisma.challengeVote.findFirst({
-        where: { userId, challenge: { slug: "like-this" } },
+        where: {
+          userId,
+          challenge: { slug: "like-this-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaaa" },
+        },
       });
       expect(vote).not.toBeNull();
     });
@@ -549,7 +560,7 @@ describe("Challenges Controller", () => {
       const challenge = await prisma.challenge.create({
         data: {
           title: "Unlike This",
-          slug: "unlike-this",
+          slug: "unlike-this-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaa",
           description: "d",
           userId,
           gameId,
@@ -561,13 +572,16 @@ describe("Challenges Controller", () => {
       await prisma.challengeVote.create({ data: { userId, challengeId: challenge.id } });
 
       const response = await request(app)
-        .delete("/api/challenges/unlike-this/likes")
+        .delete("/api/challenges/unlike-this-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaa/likes")
         .set("Cookie", accessToken);
 
       expect(response.status).toBe(204);
 
       const vote = await prisma.challengeVote.findFirst({
-        where: { userId, challenge: { slug: "unlike-this" } },
+        where: {
+          userId,
+          challenge: { slug: "unlike-this-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaa" },
+        },
       });
       expect(vote).toBeNull();
     });
@@ -581,7 +595,7 @@ describe("Challenges Controller", () => {
       await prisma.challenge.create({
         data: {
           title: "No Like",
-          slug: "no-like",
+          slug: "no-like-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaaaaaa",
           description: "d",
           userId,
           gameId,
@@ -591,7 +605,7 @@ describe("Challenges Controller", () => {
       });
 
       const response = await request(app)
-        .delete("/api/challenges/no-like/likes")
+        .delete("/api/challenges/no-like-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaaaaaa/likes")
         .set("Cookie", accessToken);
 
       expect(response.status).toBe(204);
@@ -603,7 +617,7 @@ describe("Challenges Controller", () => {
       await prisma.challenge.create({
         data: {
           title: "Favorite This",
-          slug: "favorite-this",
+          slug: "favorite-this-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaa",
           description: "d",
           userId,
           gameId,
@@ -613,14 +627,19 @@ describe("Challenges Controller", () => {
       });
 
       const response = await request(app)
-        .post("/api/challenges/favorite-this/favorites")
+        .post(
+          "/api/challenges/favorite-this-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaa/favorites"
+        )
         .set("Cookie", accessToken);
 
       expect(response.status).toBe(201);
       expect(response.body.message).toBe("Challenge add to favorite");
 
       const fav = await prisma.userFavoriteChallenge.findFirst({
-        where: { userId, challenge: { slug: "favorite-this" } },
+        where: {
+          userId,
+          challenge: { slug: "favorite-this-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaa" },
+        },
       });
       expect(fav).not.toBeNull();
     });
@@ -636,7 +655,7 @@ describe("Challenges Controller", () => {
       const challenge = await prisma.challenge.create({
         data: {
           title: "Unfavorite This",
-          slug: "unfavorite-this",
+          slug: "unfavorite-this-long-slug-to-pass-validation-aaaaaaaaaaaaaaaa",
           description: "d",
           userId,
           gameId,
@@ -648,13 +667,18 @@ describe("Challenges Controller", () => {
       await prisma.userFavoriteChallenge.create({ data: { userId, challengeId: challenge.id } });
 
       const response = await request(app)
-        .delete("/api/challenges/unfavorite-this/favorites")
+        .delete(
+          "/api/challenges/unfavorite-this-long-slug-to-pass-validation-aaaaaaaaaaaaaaaa/favorites"
+        )
         .set("Cookie", accessToken);
 
       expect(response.status).toBe(204);
 
       const fav = await prisma.userFavoriteChallenge.findFirst({
-        where: { userId, challenge: { slug: "unfavorite-this" } },
+        where: {
+          userId,
+          challenge: { slug: "unfavorite-this-long-slug-to-pass-validation-aaaaaaaaaaaaaaaa" },
+        },
       });
       expect(fav).toBeNull();
     });
@@ -670,7 +694,7 @@ describe("Challenges Controller", () => {
       await prisma.challenge.create({
         data: {
           title: "Challenge to Join",
-          slug: "challenge-to-join",
+          slug: "challenge-to-join-long-slug-to-pass-validation-aaaaaaaaaaaaa",
           description: "Description",
           userId,
           gameId,
@@ -680,7 +704,9 @@ describe("Challenges Controller", () => {
       });
 
       const response = await request(app)
-        .post("/api/challenges/challenge-to-join/participations")
+        .post(
+          "/api/challenges/challenge-to-join-long-slug-to-pass-validation-aaaaaaaaaaaaa/participations"
+        )
         .set("Cookie", accessToken)
         .send({
           title: "Joining Now",

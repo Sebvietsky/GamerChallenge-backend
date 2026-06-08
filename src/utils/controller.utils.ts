@@ -120,12 +120,12 @@ export const leaderboardParticipationSelectParams = {
     select: {
       title: true,
       slug: true,
+      difficulty: { select: difficultySelectParams },
       game: {
         select: {
           name: true,
           coverUrl: true,
         },
-        difficulty: { select: difficultySelectParams },
       },
     },
   },

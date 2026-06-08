@@ -415,7 +415,7 @@ describe("Participations Controller", () => {
       await prisma.participation.create({
         data: {
           title: "No Vote Part",
-          slug: "no-vote-part",
+          slug: "no-vote-part-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaa",
           video: "https://youtube.com/watch?v=novote",
           userId: otherUserId,
           challengeId,
@@ -423,7 +423,9 @@ describe("Participations Controller", () => {
       });
 
       const response = await request(app)
-        .delete("/api/participations/no-vote-part/vote")
+        .delete(
+          "/api/participations/no-vote-part-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaa/vote"
+        )
         .set("Cookie", accessToken);
 
       expect(response.status).toBe(204);
@@ -435,7 +437,7 @@ describe("Participations Controller", () => {
       const participation = await prisma.participation.create({
         data: {
           title: "Double Vote",
-          slug: "double-vote",
+          slug: "double-vote-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaaa",
           video: "https://youtube.com/watch?v=double",
           userId: otherUserId,
           challengeId,
@@ -447,7 +449,9 @@ describe("Participations Controller", () => {
       });
 
       const response = await request(app)
-        .post("/api/participations/double-vote/vote")
+        .post(
+          "/api/participations/double-vote-long-slug-to-pass-validation-aaaaaaaaaaaaaaaaaaa/vote"
+        )
         .set("Cookie", accessToken);
 
       expect(response.status).toBe(409);

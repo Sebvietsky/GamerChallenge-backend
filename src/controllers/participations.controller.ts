@@ -31,7 +31,7 @@ const controller = {
       },
     };
 
-    res.status(200).send(response);
+    res.status(200).json(response);
   },
 
   async userLikeParticipation(req: Request, res: Response) {
@@ -96,7 +96,7 @@ const controller = {
       });
     }
 
-    res.status(200).send({
+    res.status(200).json({
       message: "Participation successfully updated.",
     });
   },
