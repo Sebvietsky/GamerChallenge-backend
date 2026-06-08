@@ -1,12 +1,14 @@
 import z from "zod";
 import { BadRequestError } from "../lib/errors";
+import env from "../config/env";
 
 export async function parseIdFromParams(id: string) {
   return await z.coerce.number().int().min(1).parseAsync(id);
 }
 
 export async function parseSlugFromParams(slug: string) {
-  return await z.string().min(40).parseAsync(slug);
+  if (env.nodeEnv === "development") return await z.string().min(2).parseAsync(slug);
+  return await z.string().min(38).parseAsync(slug);
 }
 
 export function generateSlug(title: string): string {
