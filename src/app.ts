@@ -8,8 +8,11 @@ import env from "./config/env";
 import cookieParser from "cookie-parser";
 import { notFoundMiddleware } from "./middlewares/not-found.middleware";
 import { generateOpenAPIDocument } from "./openapi/spec";
+import helmet from "helmet";
 
 export const app: Express = express();
+
+app.use(helmet());
 
 app.use(express.json());
 
