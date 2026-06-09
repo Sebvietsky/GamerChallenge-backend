@@ -7,6 +7,7 @@ import "./paths/challenges.paths";
 import "./paths/games.paths";
 import "./paths/participations.paths";
 import "./paths/leaderboard.paths";
+import "./paths/user.paths";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function generateOpenAPIDocument(): any {
