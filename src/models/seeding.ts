@@ -25,22 +25,22 @@ const CHALLENGES_PER_GAME = 5;
 // ─── Reference data ───────────────────────────────────────────────────────────
 
 const CHALLENGE_CATEGORIES = [
-  { name: "Speedrun", colorCode: "#FF4500" },
-  { name: "No Hit", colorCode: "#DC143C" },
-  { name: "Score Attack", colorCode: "#FFD700" },
-  { name: "Cosplay Run", colorCode: "#9370DB" },
-  { name: "Créativité", colorCode: "#32CD32" },
-  { name: "PvP", colorCode: "#1E90FF" },
-  { name: "Coopératif", colorCode: "#FF69B4" },
-  { name: "Low%", colorCode: "#FF8C00" },
+  { name: "Speedrun", colorCode: "#B9D8F0" },
+  { name: "No Hit", colorCode: "#EE8A96" },
+  { name: "Score Attack", colorCode: "#F3C969" },
+  { name: "Cosplay Run", colorCode: "#8B6DD1" },
+  { name: "Créativité", colorCode: "#6FB88B" },
+  { name: "PvP", colorCode: "#6F55B7" },
+  { name: "Coopératif", colorCode: "#F3A5AD" },
+  { name: "Low%", colorCode: "#D8A93A" },
 ];
 
 const DIFFICULTIES = [
-  { name: "Facile", colorCode: "#4CAF50" },
-  { name: "Moyen", colorCode: "#FF9800" },
-  { name: "Difficile", colorCode: "#F44336" },
-  { name: "Expert", colorCode: "#9C27B0" },
-  { name: "Légendaire", colorCode: "#000000" },
+  { name: "Facile", colorCode: "#FFFFFF" },
+  { name: "Moyen", colorCode: "#6FB88B" },
+  { name: "Difficile", colorCode: "#B9D8F0" },
+  { name: "Expert", colorCode: "#6F55B7" },
+  { name: "Légendaire", colorCode: "#F97316" },
 ];
 
 const GAMES = [
