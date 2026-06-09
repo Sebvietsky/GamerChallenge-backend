@@ -1,27 +1,19 @@
 FROM node:24-alpine
 
-# OpenSSL requis par Prisma sur Alpine
 RUN apk add --no-cache openssl
 
-# Active pnpm via corepack
 RUN corepack enable
 
 WORKDIR /app
 
-# Copie des manifestes en premier pour profiter du cache Docker
 COPY package.json pnpm-lock.yaml ./
 
-# Installe TOUTES les deps (dev incluses, pour avoir tsx en dev)
 RUN pnpm install --frozen-lockfile
 
-# Copie du reste du code
 COPY . .
 
-# Génère le client Prisma
 RUN pnpm run db:generate
 
-# Compile TypeScript → JavaScript
 RUN pnpm run build
 
-# Lance en prod : migrate deploy + node dist/...
 CMD ["pnpm", "run", "docker:start"]

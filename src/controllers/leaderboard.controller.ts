@@ -93,11 +93,6 @@ const controller = {
 
     const { skip, take } = getPaginationParams(page, limit);
 
-    /*
-      Prisma ne peut pas ORDER BY sur une somme de deux _count différents.
-      On utilise $queryRaw pour trier par (participations + challenges) directement en SQL.
-      Sans `since` : all-time. Avec `since` : seules les activités dans la période comptent.
-    */
     const dateFilterP = sinceDate ? Prisma.sql`AND p.created_at >= ${sinceDate}` : Prisma.empty;
     const dateFilterC = sinceDate ? Prisma.sql`AND c.created_at >= ${sinceDate}` : Prisma.empty;
 

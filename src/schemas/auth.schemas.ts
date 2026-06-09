@@ -72,8 +72,8 @@ export const registerUserBodySchema = z
       .literal(true)
       .openapi({ description: "Doit être à true pour valider l'inscription" }),
   })
-  // https://v3.zod.dev/?id=refine
+
   .refine((data) => data.password === data.confirm, {
     message: "Passwords don't match",
-    path: ["confirm"], // l'erreur sera attachée à ce champ
+    path: ["confirm"],
   });

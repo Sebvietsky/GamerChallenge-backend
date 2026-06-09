@@ -4,8 +4,6 @@ import { prisma } from "../lib/prisma";
 import { app } from "../app";
 import type { IGDBGame } from "../lib/interface";
 
-// On mock le module IGDB pour éviter de vrais appels réseau pendant les tests.
-// queryIGDB sera remplacé par une fonction controllable via mockResolvedValue.
 vi.mock("../utils/igdb.utils", () => ({
   queryIGDB: vi.fn(),
   buildCoverUrl: (url: string, size = "cover_big") =>
@@ -13,19 +11,12 @@ vi.mock("../utils/igdb.utils", () => ({
   buildImageUrl: (url: string, size = "t_1080p") => `https:${url.replace("t_thumb", size)}`,
 }));
 
-// Import après vi.mock pour récupérer la version mockée
 import { queryIGDB } from "../utils/igdb.utils";
 const mockQueryIGDB = vi.mocked(queryIGDB);
 
-// ---------------------------------------------------------------------------
-// Fixtures partagées
-// ---------------------------------------------------------------------------
-
-// Jeux de test avec des igdbId fictifs qui n'entrent pas en conflit avec le seeding
 const GAME_A = { igdbId: 99001, name: "Test Game A", studio: "Studio A", platform: "PC" };
 const GAME_B = { igdbId: 99002, name: "Test Game B", studio: "Studio B", platform: "Switch" };
 
-// Résultats IGDB simulés retournés par le mock
 const IGDB_RESULTS: IGDBGame[] = [
   {
     id: 119133,
@@ -43,10 +34,6 @@ const IGDB_RESULTS: IGDBGame[] = [
     involved_companies: [{ developer: true, company: { name: "FromSoftware" } }],
   },
 ];
-
-// ---------------------------------------------------------------------------
-// [GET] /games
-// ---------------------------------------------------------------------------
 
 describe("[GET] /games", () => {
   beforeEach(async () => {
@@ -123,10 +110,6 @@ describe("[GET] /games", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// [GET] /games/search
-// ---------------------------------------------------------------------------
-
 describe("[GET] /games/search", () => {
   afterEach(() => {
     vi.clearAllMocks();
@@ -152,7 +135,9 @@ describe("[GET] /games/search", () => {
     expect(first).toHaveProperty("name", "Elden Ring");
     expect(first).toHaveProperty("studio", "FromSoftware");
     expect(first).toHaveProperty("platform", "PC, PlayStation 5");
-    expect(first.coverUrl).toMatch(/^https:\/\//);
+    expect(first.coverUrl).toMatch(
+      /^https:\/\/images.igdb.com\/igdb\/image\/upload\/t_cover_big\/.*\.jpg$/
+    );
   });
 
   test("should set studio to null if no developer company", async () => {
@@ -231,15 +216,10 @@ describe("[GET] /games/search", () => {
 
     await request(app).get("/api/games/search?q=test");
 
-    // Vérifie que la query IGDB inclut "limit 10"
     const callBody = mockQueryIGDB.mock.calls[0]?.[1] ?? "";
     expect(callBody).toContain("limit 10");
   });
 });
-
-// ---------------------------------------------------------------------------
-// [GET] /games/:igdbId
-// ---------------------------------------------------------------------------
 
 describe("[GET] /games/:igdbId", () => {
   beforeEach(async () => {

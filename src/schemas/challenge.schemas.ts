@@ -1,26 +1,10 @@
 import z from "../lib/zod";
 
-/*
-  title               String          @db.VarChar(200) => Dans le body
-  description         String          @db.Text
-  hints               String?         @db.Text
-  demo                String?         @db.VarChar(255)
-  goals               String?         @db.Text
-  closesAt            DateTime?       @map("closes_at") @db.Timestamptz()
-  gameId              Int             @map("game_id")
-  challengeCategoryId Int             @map("challenge_category_id")
-  difficultyId        Int             @map("difficulty_id")
-}
-*/
-
 export const createOneChallengeBodySchema = z.object({
-  title: z
-    .string()
-    .min(2)
-    .openapi({
-      description: "Titre du challenge, minimum 2 caractères",
-      example: "Speedrun Zelda BOTW any%",
-    }),
+  title: z.string().min(2).openapi({
+    description: "Titre du challenge, minimum 2 caractères",
+    example: "Speedrun Zelda BOTW any%",
+  }),
   description: z.string().min(2).openapi({ description: "Description complète du challenge" }),
   hints: z
     .string()
@@ -33,13 +17,10 @@ export const createOneChallengeBodySchema = z.object({
     .optional()
     .openapi({ description: "URL d'une démo ou vidéo de référence (optionnel)" }),
   goals: z.string().min(2).optional().openapi({ description: "Objectifs à atteindre (optionnel)" }),
-  closesAt: z.coerce
-    .date()
-    .optional()
-    .openapi({
-      description: "Date de clôture du challenge (optionnel)",
-      example: "2026-12-31T23:59:59Z",
-    }),
+  closesAt: z.coerce.date().optional().openapi({
+    description: "Date de clôture du challenge (optionnel)",
+    example: "2026-12-31T23:59:59Z",
+  }),
   igdbId: z.coerce
     .number()
     .int()
@@ -82,11 +63,8 @@ export const createOneParticipationWithinOneChallengeBodySchema = z.object({
     .min(2)
     .openapi({ description: "Titre de la participation", example: "Mon run en 4h32" }),
   description: z.string().min(2).openapi({ description: "Description de la participation" }),
-  video: z
-    .string()
-    .min(2)
-    .openapi({
-      description: "URL de la vidéo de démonstration",
-      example: "https://www.youtube.com/watch?v=xxx",
-    }),
+  video: z.string().min(2).openapi({
+    description: "URL de la vidéo de démonstration",
+    example: "https://www.youtube.com/watch?v=xxx",
+  }),
 });

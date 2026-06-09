@@ -1,12 +1,5 @@
 import z from "../lib/zod";
 
-/*
-    video          String              @db.VarChar(255)
-    title          String              @db.VarChar(200)
-    description    String?             @db.Text
-    challengeId    Int                 @map("challenge_id")
-    userId         Int                 @map("user_id")
-*/
 export const updateOneParticipationWithinOneChallengeBodySchema = z.object({
   video: z.string().min(2).optional().openapi({ description: "Nouvelle URL vidéo (optionnel)" }),
   title: z.string().min(2).optional().openapi({ description: "Nouveau titre (optionnel)" }),

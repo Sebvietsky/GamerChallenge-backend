@@ -114,8 +114,6 @@ describe("User Controller", () => {
     vi.clearAllMocks();
   });
 
-  // ── GET /api/user/isFavorite ──────────────────────────────────────────────────
-
   describe("GET /api/user/isFavorite", () => {
     test("should return 200 with slugs when user has favorites", async () => {
       await prisma.userFavoriteChallenge.create({
@@ -143,8 +141,6 @@ describe("User Controller", () => {
       expect(response.status).toBe(401);
     });
   });
-
-  // ── GET /api/user/getFavorites ────────────────────────────────────────────────
 
   describe("GET /api/user/getFavorites", () => {
     test("should return 200 with full challenge data", async () => {
@@ -216,8 +212,6 @@ describe("User Controller", () => {
     });
   });
 
-  // ── GET /api/user/isLikedChallenge ────────────────────────────────────────────
-
   describe("GET /api/user/isLikedChallenge", () => {
     test("should return 200 with slugs when user has liked challenges", async () => {
       await prisma.challengeVote.create({
@@ -250,8 +244,6 @@ describe("User Controller", () => {
     });
   });
 
-  // ── GET /api/user/getLikedChallenges ──────────────────────────────────────────
-
   describe("GET /api/user/getLikedChallenges", () => {
     test("should return 200 with full challenge data", async () => {
       await prisma.challengeVote.create({
@@ -281,8 +273,6 @@ describe("User Controller", () => {
       expect(response.status).toBe(401);
     });
   });
-
-  // ── GET /api/user/isLikedParticipation ────────────────────────────────────────
 
   describe("GET /api/user/isLikedParticipation", () => {
     test("should return 200 with slugs when user has liked participations", async () => {
@@ -316,8 +306,6 @@ describe("User Controller", () => {
     });
   });
 
-  // ── GET /api/user/getLikedParticipations ──────────────────────────────────────
-
   describe("GET /api/user/getLikedParticipations", () => {
     test("should return 200 with full participation data", async () => {
       await prisma.participationVote.create({
@@ -346,8 +334,6 @@ describe("User Controller", () => {
       expect(response.status).toBe(401);
     });
   });
-
-  // ── GET /api/user/dashboard ───────────────────────────────────────────────────
 
   describe("GET /api/user/dashboard", () => {
     test("should return 200 with correct counts", async () => {
@@ -402,7 +388,6 @@ describe("User Controller", () => {
     });
 
     test("should return null for mostLikedChallenge and mostLikedParticipation when user has no data", async () => {
-      // Delete the challenge created in beforeEach (which belongs to userId)
       await prisma.challenge.deleteMany({ where: { userId } });
 
       const response = await request(app).get("/api/user/dashboard").set("Cookie", accessToken);
@@ -413,7 +398,6 @@ describe("User Controller", () => {
     });
 
     test("should only count data belonging to the authenticated user", async () => {
-      // otherUser has a participation (created in beforeEach) but userId does not
       const response = await request(app).get("/api/user/dashboard").set("Cookie", accessToken);
 
       expect(response.status).toBe(200);

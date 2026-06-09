@@ -53,8 +53,6 @@ const controller = {
     });
   },
 
-  // Identifiant public = igdbId. Retourne le jeu et ses challenges associés.
-  // 404 si le jeu n'a pas encore de challenge créé (pas encore en BDD).
   async findOne(req: Request, res: Response): Promise<void> {
     const igdbId = parseInt(req.params.igdbId as string);
 
@@ -82,7 +80,6 @@ const controller = {
     res.status(200).json({ data: game });
   },
 
-  // Recherche sur IGDB — utilisé pour l'autocomplétion lors de la création d'un challenge.
   async search(req: Request, res: Response): Promise<void> {
     const { q, limit, bannerSize } = await searchGamesQuerySchema.parseAsync(req.query);
 
