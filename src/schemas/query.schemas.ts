@@ -1,3 +1,4 @@
+import { ChallengesOrderBy } from "../lib/enum";
 import z from "../lib/zod";
 
 export const PaginationOutputSchema = z.object({
@@ -54,9 +55,7 @@ export const QueryChallengeOutputSchema = z.object({
   since: z.enum(["1w", "1m", "3m", "6m", "1y"]).optional(),
   closesAfter: z.coerce.date().optional(),
   closesBefore: z.coerce.date().optional(),
-  orderBy: z
-    .enum(["title", "createdAt", "closesAt", "status", "votes", "participations"])
-    .optional(),
+  orderBy: z.enum(ChallengesOrderBy).optional(),
   sort: z.enum(["asc", "desc"]).default("asc"),
 });
 
