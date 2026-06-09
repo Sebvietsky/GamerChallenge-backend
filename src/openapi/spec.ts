@@ -6,6 +6,7 @@ import "./paths/challenges.paths";
 import "./paths/games.paths";
 import "./paths/participations.paths";
 import "./paths/leaderboard.paths";
+import "./paths/user.paths";
 
 export function generateOpenAPIDocument(): any {
   const generator = new OpenApiGeneratorV3(registry.definitions);
