@@ -98,6 +98,7 @@ describe("Participations Controller", () => {
     const difficulty = await prisma.difficulty.create({
       data: {
         name: "Easy",
+        difficultyIndex: 1,
       },
     });
     difficultyId = difficulty.id;
