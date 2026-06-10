@@ -33,23 +33,33 @@ export const PaginationLeaderboardOutputSchema = z.object({
     .openapi({ description: "Période : 1 semaine, 1 mois, 3 mois, 6 mois ou 1 an" }),
 });
 
+const CategorySchema = z.enum([
+  "Speedrun",
+  "No Hit",
+  "Score Attack",
+  "Cosplay Run",
+  "Créativité",
+  "PvP",
+  "Coopératif",
+  "Low%",
+]);
+
+const DifficultySchema = z.enum(["Facile", "Moyen", "Difficile", "Expert", "Légendaire"]);
+
 export const QueryChallengeOutputSchema = z.object({
   search: z.string().trim().min(1).optional(),
 
-  category: z
-    .enum([
-      "Speedrun",
-      "No Hit",
-      "Score Attack",
-      "Cosplay Run",
-      "Créativité",
-      "PvP",
-      "Coopératif",
-      "Low%",
-    ])
-    .optional(),
+  categories: z
+    .union([CategorySchema, z.array(CategorySchema)])
+    .optional()
+    .transform((v) => (v === undefined ? [] : Array.isArray(v) ? v : [v])),
   game: z.string().trim().min(1).optional(),
-  difficulty: z.enum(["Facile", "Moyen", "Difficile", "Expert", "Légendaire"]).optional(),
+
+  difficulties: z
+    .union([DifficultySchema, z.array(DifficultySchema)])
+    .optional()
+    .transform((v) => (v === undefined ? [] : Array.isArray(v) ? v : [v])),
+
   creator: z.string().trim().min(1).optional(),
   status: z.enum(["active", "closed"]).optional(),
   since: z.enum(["1w", "1m", "3m", "6m", "1y"]).optional(),

@@ -76,9 +76,9 @@ const controller = {
     const { page, limit }: PaginationParams = await PaginationOutputSchema.parseAsync(req.query);
     const {
       search,
-      category,
+      categories,
       game,
-      difficulty,
+      difficulties,
       creator,
       status,
       since,
@@ -92,12 +92,19 @@ const controller = {
       ? new Date(Date.now() - SINCE_DAYS[since] * 24 * 60 * 60 * 1000)
       : undefined;
 
+    const categoryInput = { challengeCategory: { name: { in: categories } } };
+    const difficultyInput = { difficulty: { name: { in: difficulties } } };
+
     const where: Prisma.ChallengeWhereInput = {
+      ...(categories.length > 0 && difficulties.length > 0
+        ? { AND: [categoryInput, difficultyInput] }
+        : categories.length > 0
+          ? { AND: [categoryInput] }
+          : difficulties.length > 0 && { AND: [difficultyInput] }),
       ...(search && { title: { contains: search, mode: "insensitive" } }),
       ...(sinceDate && { createdAt: { gte: sinceDate } }),
-      ...(category && { challengeCategory: { name: category } }),
       ...(game && { game: { name: { contains: game, mode: "insensitive" } } }),
-      ...(difficulty && { difficulty: { name: difficulty } }),
+
       ...(creator && {
         user: { username: { contains: creator, mode: "insensitive" } },
       }),
