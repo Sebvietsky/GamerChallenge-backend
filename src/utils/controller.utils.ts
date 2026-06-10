@@ -67,6 +67,20 @@ export const userSelectParams = {
   username: true,
   country: true,
   profilePicture: true,
+  _count: {
+    select: {
+      participations: true,
+    },
+  },
+  participations: {
+    select: {
+      _count: {
+        select: {
+          votes: true,
+        },
+      },
+    },
+  },
 };
 
 export const challengeSelectParams = {
