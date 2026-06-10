@@ -24,6 +24,7 @@ import {
   type updateOneChallengeParams,
 } from "../schemas/challenge.schemas";
 import { findOrCreateGameFromIGDB } from "../utils/game.utils";
+import { ChallengesOrderBy } from "../lib/enum";
 
 const SINCE_DAYS: Record<NonNullable<FindBestForHomePageQueryParams["since"]>, number> = {
   "1w": 7,
@@ -113,9 +114,11 @@ const controller = {
     const COUNT_FIELDS = ["votes", "participations"] as const;
 
     const orderByClause: Prisma.ChallengeOrderByWithRelationInput = orderBy
-      ? COUNT_FIELDS.includes(orderBy as (typeof COUNT_FIELDS)[number])
-        ? { [orderBy]: { _count: sort } }
-        : { [orderBy]: orderBy === "closesAt" ? { sort, nulls: "last" } : sort }
+      ? orderBy === ChallengesOrderBy.difficulty
+        ? { difficulty: { difficultyIndex: sort } }
+        : COUNT_FIELDS.includes(orderBy as (typeof COUNT_FIELDS)[number])
+          ? { [orderBy]: { _count: sort } }
+          : { [orderBy]: orderBy === "closesAt" ? { sort, nulls: "last" } : sort }
       : { createdAt: "desc" };
 
     const { skip, take } = getPaginationParams(page, limit);

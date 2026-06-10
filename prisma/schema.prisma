@@ -1,5 +1,3 @@
-
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -119,10 +117,11 @@ model ChallengeCategory {
 }
 
 model Difficulty {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique @db.VarChar(50)
-  colorCode String?  @map("color_code") @db.VarChar(7)
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  id              Int      @id @default(autoincrement())
+  name            String   @unique @db.VarChar(50)
+  difficultyIndex Int      @unique
+  colorCode       String?  @map("color_code") @db.VarChar(7)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
   challenges Challenge[]
 

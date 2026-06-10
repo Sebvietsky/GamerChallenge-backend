@@ -31,11 +31,11 @@ const CHALLENGE_CATEGORIES = [
 ];
 
 const DIFFICULTIES = [
-  { name: "Facile", colorCode: "#FFFFFF" },
-  { name: "Moyen", colorCode: "#6FB88B" },
-  { name: "Difficile", colorCode: "#B9D8F0" },
-  { name: "Expert", colorCode: "#6F55B7" },
-  { name: "Légendaire", colorCode: "#F97316" },
+  { name: "Facile", difficultyIndex: 1, colorCode: "#FFFFFF" },
+  { name: "Moyen", difficultyIndex: 2, colorCode: "#6FB88B" },
+  { name: "Difficile", difficultyIndex: 3, colorCode: "#B9D8F0" },
+  { name: "Expert", difficultyIndex: 4, colorCode: "#6F55B7" },
+  { name: "Légendaire", difficultyIndex: 5, colorCode: "#F97316" },
 ];
 
 const GAMES = [
