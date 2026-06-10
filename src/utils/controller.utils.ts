@@ -70,6 +70,17 @@ export const userSelectParams = {
   _count: {
     select: {
       participations: true,
+      challenges: true,
+    },
+  },
+  challenges: {
+    select: {
+      _count: {
+        select: {
+          votes: true,
+          participations: true,
+        },
+      },
     },
   },
   participations: {
