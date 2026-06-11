@@ -184,7 +184,7 @@ const controller = {
       }),
       prisma.participation.findMany({
         where,
-        select: participationSelectParams,
+        select: { ...participationSelectParams, challenge: { select: challengeSelectParams } },
         orderBy: {
           createdAt: "desc",
         },
