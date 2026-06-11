@@ -167,6 +167,16 @@ export const participationSelectParams = {
   status: true,
   visibility: true,
   user: { select: userSelectParams },
+  challenge: {
+    select: {
+      game: {
+        select: {
+          name: true,
+          coverUrl: true,
+        },
+      },
+    },
+  },
   _count: {
     select: {
       votes: true,
