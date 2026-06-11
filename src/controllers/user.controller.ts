@@ -156,6 +156,8 @@ const controller = {
       totalVoteReceivedOnParticipation,
       mostLikedChallenge,
       mostLikedParticipation,
+      allUserChallenges,
+      allUserParticipations,
     ] = await Promise.all([
       prisma.participation.count({ where }),
       prisma.challenge.count({ where }),
@@ -173,6 +175,20 @@ const controller = {
         select: participationSelectParams,
         orderBy: { votes: { _count: "desc" } },
       }),
+      prisma.challenge.findMany({
+        where,
+        select: challengeSelectParams,
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
+      prisma.participation.findMany({
+        where,
+        select: participationSelectParams,
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
     ]);
 
     res.status(200).json({
@@ -185,6 +201,8 @@ const controller = {
       totalVoteReceivedOnParticipation,
       mostLikedChallenge,
       mostLikedParticipation,
+      allUserChallenges,
+      allUserParticipations,
     });
   },
 };
