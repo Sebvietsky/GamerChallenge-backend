@@ -94,6 +94,12 @@ export const userSelectParams = {
   },
 };
 
+export const hintsSelectParams = {
+  description: true,
+  position: true,
+  challengeId: true,
+};
+
 export const challengeSelectParams = {
   id: true,
   title: true,
@@ -101,6 +107,7 @@ export const challengeSelectParams = {
   closesAt: true,
   status: true,
   createdAt: true,
+  hints: { select: hintsSelectParams },
   game: { select: gameSelectParams },
   challengeCategory: { select: challengeCategorySelectParams },
   difficulty: { select: difficultySelectParams },
@@ -122,7 +129,7 @@ export const challengeSlugSelectParams = {
   status: true,
   createdAt: true,
   description: true,
-  hints: true,
+  hints: { select: hintsSelectParams },
   demo: true,
   goals: true,
   game: { select: gameSelectParams },

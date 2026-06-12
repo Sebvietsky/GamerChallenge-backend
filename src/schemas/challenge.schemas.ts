@@ -7,10 +7,12 @@ export const createOneChallengeBodySchema = z.object({
   }),
   description: z.string().min(2).openapi({ description: "Description complète du challenge" }),
   hints: z
-    .string()
-    .min(2)
+    .array(z.string().min(2))
     .optional()
-    .openapi({ description: "Indice(s) pour aider les participants (optionnel)" }),
+    .openapi({
+      description: "Liste ordonnée des indices du challenge (index attribué selon l'ordre)",
+      example: ["Commence par la zone de départ", "Utilise le glitch du mur"],
+    }),
   demo: z
     .string()
     .min(2)
@@ -45,7 +47,7 @@ export const createOneChallengeBodySchema = z.object({
 export const updateOneChallengeBodySchema = z.object({
   title: z.string().min(2).optional(),
   description: z.string().min(2).optional(),
-  hints: z.string().min(2).optional(),
+  hints: z.array(z.string().min(2)).optional(),
   demo: z.string().min(2).optional(),
   goals: z.string().min(2).optional(),
   closesAt: z.coerce.date().optional(),
