@@ -5,6 +5,7 @@ import controller from "../controllers/participations.controller";
 
 const router: Router = Router();
 
+router.get("/trends", controller.findTrends);
 router.get("/:slug", controller.findOneParticipationWithinOneChallenge);
 router.post(
   "/:slug/vote",
