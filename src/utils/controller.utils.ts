@@ -59,6 +59,7 @@ export const challengeCategorySelectParams = {
 };
 
 export const difficultySelectParams = {
+  difficultyIndex: true,
   name: true,
   colorCode: true,
 };
