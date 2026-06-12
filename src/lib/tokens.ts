@@ -33,7 +33,7 @@ const baseCookieOptions = {
 
   secure: isProduction,
   // sameSite = Lax => les cookies ne sont pas envoyés sur les sous-requêtes cross-site normales (par exemple pour charger des images ou des frames dans un site tiers), mais sont envoyés quand un utilisateur navigue vers le site d'origine (c'est-à-dire en suivant un lien)
-  sameSite: isProduction ? ("none" as const) : ("lax" as const),
+  sameSite: "lax" as const,
 };
 
 export function setAccessTokenCookie(res: Response, accessToken: Token) {
