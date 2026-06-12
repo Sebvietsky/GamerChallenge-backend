@@ -54,11 +54,13 @@ export const gameSelectParams = {
 };
 
 export const challengeCategorySelectParams = {
+  id: true,
   name: true,
   colorCode: true,
 };
 
 export const difficultySelectParams = {
+  id: true,
   difficultyIndex: true,
   name: true,
   colorCode: true,
