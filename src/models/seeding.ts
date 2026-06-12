@@ -90,6 +90,7 @@ async function main() {
   await prisma.challengeVote.deleteMany();
   await prisma.userFavoriteChallenge.deleteMany();
   await prisma.participation.deleteMany();
+  await prisma.hint.deleteMany();
   await prisma.challenge.deleteMany();
   await prisma.gameHasGameCategory.deleteMany();
   await prisma.refreshToken.deleteMany();
@@ -194,7 +195,6 @@ async function main() {
           title,
           slug: uniqueSlug(title, challengeSlugs),
           description: faker.lorem.paragraphs({ min: 2, max: 4 }),
-          hints: faker.lorem.sentences({ min: 1, max: 2 }),
           demo: faker.helpers.arrayElement(GAME_TRAILER_URLS),
           goals: faker.lorem.sentences({ min: 2, max: 4 }),
           closesAt:
@@ -214,6 +214,22 @@ async function main() {
     }
   }
   console.log(`✅ ${allChallenges.length} challenges créés`);
+
+  let hintsCount = 0;
+  for (const challenge of allChallenges) {
+    const hintCount = faker.number.int({ min: 0, max: 4 });
+    for (let position = 1; position <= hintCount; position++) {
+      await prisma.hint.create({
+        data: {
+          description: faker.lorem.sentences({ min: 1, max: 2 }),
+          position,
+          challengeId: challenge.id,
+        },
+      });
+      hintsCount++;
+    }
+  }
+  console.log(`✅ ${hintsCount} indices (hints) créés`);
 
   const activeChallenges = allChallenges.filter((c) => c.status === "active");
   const participationSlugs = new Set<string>();

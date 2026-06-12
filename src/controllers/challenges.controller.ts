@@ -63,6 +63,7 @@ const controller = {
 
     const response = challenges.map((chall) => ({
       ...chall,
+
       game: {
         ...chall.game,
         categories: chall.game.categories.map(({ category }) => category.name),
@@ -246,7 +247,14 @@ const controller = {
         title,
         slug: generateSlug(title),
         description,
-        hints: hints ?? null,
+        ...(hints?.length && {
+          hints: {
+            create: hints.map((hintDescription, i) => ({
+              description: hintDescription,
+              position: i + 1,
+            })),
+          },
+        }),
         demo: demo ?? null,
         goals: goals ?? null,
         closesAt: closesAt ?? null,
@@ -307,16 +315,25 @@ const controller = {
   async updateOne(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
 
-    const { igdbId, ...body }: updateOneChallengeParams =
+    const { igdbId, hints, ...body }: updateOneChallengeParams =
       await updateOneChallengeBodySchema.parseAsync(req.body);
 
-    const data = body as Prisma.ChallengeUncheckedUpdateInput;
+    const data = body as Prisma.ChallengeUpdateInput;
 
     let gameId: number;
 
     if (igdbId) {
       gameId = await findOrCreateGameFromIGDB(igdbId as number);
-      data.gameId = gameId;
+      data.game = { connect: { id: gameId } };
+    }
+
+    // hints omis = on ne touche pas aux indices ; hints fourni (même vide) = remplacement complet.
+    // Le deleteMany + create dans un seul update est atomique (Prisma l'enveloppe en transaction).
+    if (hints !== undefined) {
+      data.hints = {
+        deleteMany: {},
+        create: hints.map((description, i) => ({ description, position: i + 1 })),
+      };
     }
 
     await prisma.challenge.update({

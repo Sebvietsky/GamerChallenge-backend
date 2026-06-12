@@ -133,7 +133,6 @@ model Challenge {
   title               String          @db.VarChar(200)
   slug                String          @unique @db.VarChar(250)
   description         String          @db.Text
-  hints               String?         @db.Text
   demo                String?         @db.VarChar(255)
   goals               String?         @db.Text
   closesAt            DateTime?       @map("closes_at") @db.Timestamptz()
@@ -146,17 +145,30 @@ model Challenge {
   userId              Int             @map("user_id")
   createdAt           DateTime        @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt           DateTime        @updatedAt @map("updated_at") @db.Timestamptz()
-
   game              Game              @relation(fields: [gameId], references: [id], onDelete: Restrict)
   challengeCategory ChallengeCategory @relation(fields: [challengeCategoryId], references: [id], onDelete: Restrict)
   difficulty        Difficulty        @relation(fields: [difficultyId], references: [id], onDelete: Restrict)
   user              User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  hints Hint[]
 
   participations Participation[]
   favoritedBy    UserFavoriteChallenge[]
   votes          ChallengeVote[]
 
   @@map("challenges")
+}
+
+model Hint {
+  id Int @id @default(autoincrement())
+  description String @db.Text
+  position Int
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  challengeId Int @map("challenge_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@unique([challengeId, position])
+  @@map("hints")
 }
 
 model Participation {
