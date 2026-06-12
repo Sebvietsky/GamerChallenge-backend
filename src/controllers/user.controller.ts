@@ -33,14 +33,22 @@ const controller = {
 
     const { skip, take } = getPaginationParams(page, limit);
 
-    const favoriteChallenges = await prisma.userFavoriteChallenge.findMany({
-      where: {
-        userId: req.user.id,
-      },
-      select: { challenge: { select: challengeSelectParams } },
-      skip,
-      take,
-    });
+    const [favoriteChallenges, total] = await Promise.all([
+      prisma.userFavoriteChallenge.findMany({
+        where: {
+          userId: req.user.id,
+        },
+        select: { challenge: { select: challengeSelectParams } },
+        skip,
+        take,
+      }),
+
+      prisma.userFavoriteChallenge.count({
+        where: {
+          userId: req.user.id,
+        },
+      }),
+    ]);
 
     if (favoriteChallenges.length === 0) throw new NotFoundError("No favorite yet");
 
@@ -54,7 +62,13 @@ const controller = {
       },
     }));
 
-    res.status(200).json(response);
+    res.status(200).json({
+      data: response,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    });
   },
 
   async getLikedChallengesSlugs(req: Request, res: Response) {
