@@ -24,14 +24,15 @@ const controller = {
         where: {
           createdAt: { gte: sinceDate },
         },
-        select: { challenge: { select: challengeSelectParams } },
+        select: { ...participationSelectParams, challenge: { select: challengeSelectParams } },
+        distinct: "id",
         skip,
         take,
       }),
 
       prisma.participation.count({
         where: {
-          userId: req.user.id,
+          createdAt: { gte: sinceDate },
         },
       }),
     ]);
@@ -39,18 +40,8 @@ const controller = {
     if (trendingParticipations.length === 0)
       throw new NotFoundError("No Trending Participations yet");
 
-    const challenge = trendingParticipations.map((c) => c.challenge);
-
-    const response = challenge.map((chall) => ({
-      ...chall,
-      game: {
-        ...chall.game,
-        categories: chall.game.categories.map(({ category }) => category.name),
-      },
-    }));
-
     res.status(200).json({
-      data: response,
+      data: trendingParticipations,
       page,
       limit,
       total,
