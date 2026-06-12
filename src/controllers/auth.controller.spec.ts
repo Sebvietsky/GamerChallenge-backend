@@ -339,14 +339,13 @@ describe("[POST] /auth/refresh", () => {
     return refreshCookie;
   }
 
-  test("should return 200 with new accessToken and refreshToken in body", async () => {
+  test("should return 204 with an empty body (tokens are sent via cookies only)", async () => {
     const refreshCookie = await loginAndGetRefreshCookie();
 
     const response = await request(app).post("/api/auth/refresh").set("Cookie", refreshCookie);
 
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty("accessToken");
-    expect(response.body).toHaveProperty("refreshToken");
+    expect(response.status).toBe(204);
+    expect(response.text).toBe("");
   });
 
   test("should set new accessToken and refreshToken cookies", async () => {

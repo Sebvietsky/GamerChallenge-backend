@@ -76,7 +76,7 @@ const controller = {
     await replaceRefreshTokenInDatabase(refreshToken, existingToken.user);
     setAccessTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
-    res.json({ accessToken, refreshToken });
+    res.status(204).end();
   },
 
   async resetPassword(req: Request, res: Response): Promise<void> {
@@ -103,7 +103,7 @@ const controller = {
   },
 
   async logoutUser(req: Request, res: Response): Promise<void> {
-    await prisma.refreshToken.delete({ where: { userId: req.user.id } });
+    await prisma.refreshToken.deleteMany({ where: { userId: req.user.id } });
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken", { path: "/api/auth/refresh" });
     res.status(204).end();
