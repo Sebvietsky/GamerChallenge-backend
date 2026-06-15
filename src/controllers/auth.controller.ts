@@ -11,6 +11,7 @@ import {
   generateTokens,
   replaceRefreshTokenInDatabase,
   setAccessTokenCookie,
+  setAuthFlagCookie,
   setRefreshTokenCookie,
 } from "../lib/tokens";
 import { UnauthorizedError } from "../lib/errors";
@@ -54,6 +55,7 @@ const controller = {
     await replaceRefreshTokenInDatabase(refreshToken, user);
     setAccessTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
+    setAuthFlagCookie(res, refreshToken);
     res.status(204).end();
   },
 
@@ -76,6 +78,8 @@ const controller = {
     await replaceRefreshTokenInDatabase(refreshToken, existingToken.user);
     setAccessTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
+    setAuthFlagCookie(res, refreshToken);
+
     res.status(204).end();
   },
 
@@ -106,6 +110,7 @@ const controller = {
     await prisma.refreshToken.deleteMany({ where: { userId: req.user.id } });
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken", { path: "/api/auth/refresh" });
+    res.clearCookie("isAuthenticated");
     res.status(204).end();
   },
 
@@ -219,6 +224,8 @@ const controller = {
 
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken", { path: "/api/auth/refresh" });
+    res.clearCookie("isAuthenticated");
+
     res.status(204).end();
   },
 };
