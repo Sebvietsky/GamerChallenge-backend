@@ -66,3 +66,11 @@ export async function replaceRefreshTokenInDatabase(
     },
   });
 }
+
+export function setAuthFlagCookie(res: Response, refreshToken: Token) {
+  res.cookie("isAuthenticated", "true", {
+    ...baseCookieOptions,
+    httpOnly: false,
+    maxAge: refreshToken.expiresInMS,
+  });
+}
