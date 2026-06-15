@@ -8,8 +8,47 @@ import {
 import { Prisma, prisma, UserRole } from "../lib/prisma";
 import { ForbiddenError, NotFoundError } from "../lib/errors";
 import { updateOneParticipationWithinOneChallengeBodySchema } from "../schemas/participations.schema";
+import { PaginationOutputSchema, type PaginationParams } from "../schemas/query.schemas";
+import { getPaginationParams } from "../utils/pagination.utils";
 
 const controller = {
+  async findTrends(req: Request, res: Response) {
+    const { page, limit }: PaginationParams = await PaginationOutputSchema.parseAsync(req.query);
+
+    const { skip, take } = getPaginationParams(page, limit);
+
+    const sinceDate = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+
+    const [trendingParticipations, total] = await Promise.all([
+      prisma.participation.findMany({
+        where: {
+          createdAt: { gte: sinceDate },
+        },
+        select: { ...participationSelectParams, challenge: { select: challengeSelectParams } },
+        distinct: "id",
+        skip,
+        take,
+      }),
+
+      prisma.participation.count({
+        where: {
+          createdAt: { gte: sinceDate },
+        },
+      }),
+    ]);
+
+    if (trendingParticipations.length === 0)
+      throw new NotFoundError("No Trending Participations yet");
+
+    res.status(200).json({
+      data: trendingParticipations,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    });
+  },
+
   async findOneParticipationWithinOneChallenge(req: Request, res: Response) {
     const slug = await parseSlugFromParams(req.params.slug as string);
 

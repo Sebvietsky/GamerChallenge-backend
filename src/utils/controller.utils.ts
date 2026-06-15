@@ -170,6 +170,7 @@ export const leaderboardParticipationSelectParams = {
 };
 
 export const participationSelectParams = {
+  id: true,
   video: true,
   title: true,
   slug: true,
