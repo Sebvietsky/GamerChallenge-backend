@@ -893,6 +893,8 @@ describe("Leaderboard Controller", () => {
       expect(res.status).toBe(200);
       expect(res.body.data.length).toBe(2);
       expect(res.body.limit).toBe(2);
+      expect(res.body.total).toBe(4);
+      expect(res.body.totalPages).toBe(2);
     });
   });
 });

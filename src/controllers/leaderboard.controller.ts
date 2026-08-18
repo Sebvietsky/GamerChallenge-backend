@@ -115,12 +115,14 @@ const controller = {
         LIMIT ${take} OFFSET ${skip}
       `,
       prisma.$queryRaw<[{ total: bigint }]>`
-        SELECT COUNT(*)::int AS total
-        FROM users u
-        LEFT JOIN participations p ON p.user_id = u.id ${dateFilterP}
-        LEFT JOIN challenges     c ON c.user_id = u.id ${dateFilterC}
-        GROUP BY u.id
-        HAVING COUNT(DISTINCT p.id) + COUNT(DISTINCT c.id) > 0
+        SELECT COUNT(*)::int AS total FROM (
+          SELECT u.id
+          FROM users u
+          LEFT JOIN participations p ON p.user_id = u.id ${dateFilterP}
+          LEFT JOIN challenges     c ON c.user_id = u.id ${dateFilterC}
+          GROUP BY u.id
+          HAVING COUNT(DISTINCT p.id) + COUNT(DISTINCT c.id) > 0
+        ) s
       `,
     ]);
 
