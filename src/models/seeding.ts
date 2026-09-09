@@ -2,6 +2,7 @@ import { faker } from "@faker-js/faker";
 import { hash } from "argon2";
 import { prisma } from "../lib/prisma.js";
 import { findOrCreateGameFromIGDB } from "../utils/game.utils.js";
+import { generateSlug } from "../utils/controller.utils.js";
 
 const USERS_COUNT = 20;
 
@@ -51,27 +52,12 @@ const GAMES = [
   { igdbId: 126459 },
 ];
 
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9\s-]/g, "")
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
-}
-
-function uniqueSlug(base: string, existing: Set<string>): string {
-  const slug = slugify(base);
-  let candidate = slug;
-  let i = 2;
-  while (existing.has(candidate)) {
-    candidate = `${slug}-${i++}`;
-  }
-  existing.add(candidate);
-  return candidate;
-}
+// Le seed doit produire exactement les memes slugs que l'application :
+// generateSlug suffixe un UUID, ce dont depend parseSlugFromParams qui
+// exige >= 38 caracteres en production. Un slugify maison produisait des
+// slugs plus courts, rendant les enregistrements concernes inaccessibles
+// en prod alors qu'ils fonctionnaient en dev (ou la contrainte est min 2).
+// L'UUID garantit aussi l'unicite, d'ou la disparition du Set de suivi.
 
 function weightedPick<T>(weighted: { value: T; weight: number }[]): T {
   const total = weighted.reduce((sum, w) => sum + w.weight, 0);
@@ -177,7 +163,6 @@ async function main() {
     `✅ ${allUsers.length} utilisateurs créés (admin, moderator + ${fakerUsers.length} users)`
   );
 
-  const challengeSlugs = new Set<string>();
   const challengeStatusWeights = [
     { value: "active" as const, weight: 75 },
     { value: "draft" as const, weight: 25 },
@@ -193,7 +178,7 @@ async function main() {
       const challenge = await prisma.challenge.create({
         data: {
           title,
-          slug: uniqueSlug(title, challengeSlugs),
+          slug: generateSlug(title),
           description: faker.lorem.paragraphs({ min: 2, max: 4 }),
           demo: faker.helpers.arrayElement(GAME_TRAILER_URLS),
           goals: faker.lorem.sentences({ min: 2, max: 4 }),
@@ -232,7 +217,6 @@ async function main() {
   console.log(`✅ ${hintsCount} indices (hints) créés`);
 
   const activeChallenges = allChallenges.filter((c) => c.status === "active");
-  const participationSlugs = new Set<string>();
   const participationPairs = new Set<string>();
   const allParticipations = [];
 
@@ -253,7 +237,7 @@ async function main() {
       const participation = await prisma.participation.create({
         data: {
           title,
-          slug: uniqueSlug(title, participationSlugs),
+          slug: generateSlug(title),
           description: faker.lorem.paragraphs({ min: 1, max: 2 }),
           video: faker.helpers.arrayElement(GAME_TRAILER_URLS),
           status: "approved",
