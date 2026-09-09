@@ -10,6 +10,13 @@ import difficultiesRouter from "./difficulties.routes";
 
 const router: Router = Router();
 
+// Sonde de disponibilite. Volontairement sans acces base : elle sert au
+// health check de l'hebergeur et au ping anti-mise-en-veille, deux appels
+// frequents qui n'ont pas a reveiller la base ni a consommer du quota.
+router.get("/health", (_req, res) => {
+  res.status(200).json({ status: "ok", uptime: process.uptime() });
+});
+
 router.use("/auth", authRouter);
 router.use("/challenges", challengeRouter);
 router.use("/games", gamesRouter);

@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node dist/server.js",
     "build": "tsup src/server.ts --format esm",
+    "build:prod": "pnpm run db:generate && pnpm run build && pnpm run db:migrate:deploy",
+    "start:prod": "pnpm run start",
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:migrate:reset": "prisma migrate reset --force",
