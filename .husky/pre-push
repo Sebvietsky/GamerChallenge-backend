@@ -1,2 +1,11 @@
-docker exec gamer_challenge_api pnpm exec tsc --noEmit 2>/dev/null || \
-  { echo "❌ Erreur TypeScript ou conteneur Docker non démarré. Lance 'docker compose up' avant de pusher."; exit 1; }
+# Verifie les types avant push. Utilise le conteneur si Docker tourne,
+# sinon retombe sur l'installation locale : ne pas avoir Docker demarre
+# n'est pas une raison de bloquer un push.
+if docker exec gamer_challenge_api true 2>/dev/null; then
+  runner="docker exec gamer_challenge_api pnpm exec tsc --noEmit"
+else
+  echo "ℹ️  Conteneur Docker indisponible, verification des types en local."
+  runner="pnpm exec tsc --noEmit"
+fi
+
+$runner || { echo "❌ Erreur TypeScript. Corrige avant de pusher."; exit 1; }
