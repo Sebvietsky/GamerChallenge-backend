@@ -11,7 +11,14 @@ const env = {
   databaseUrl: requireEnv("DATABASE_URL"),
   jwtSecret: requireEnv("JWT_SECRET"),
   nodeEnv: requireEnv("NODE_ENV"),
-  allowedOrigins: requireEnv("ALLOWED_ORIGINS") || "*",
+  // Liste d'origines separees par des virgules. On retire les slashs finaux :
+  // un navigateur envoie toujours son Origin sans slash, alors qu'une URL
+  // copiee depuis la barre d'adresse en porte un, ce qui ferait echouer la
+  // comparaison. Le || "*" precedent etait mort : requireEnv leve deja si vide.
+  allowedOrigins: requireEnv("ALLOWED_ORIGINS")
+    .split(",")
+    .map((origin) => origin.trim().replace(/\/+$/, ""))
+    .filter(Boolean),
   igdbClientId: requireEnv("IGDB_CLIENT_ID"),
   igdbClientSecret: requireEnv("IGDB_CLIENT_SECRET"),
 };
