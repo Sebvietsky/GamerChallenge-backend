@@ -151,9 +151,9 @@ describe("User Controller", () => {
       const response = await request(app).get("/api/user/getFavorites").set("Cookie", accessToken);
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(1);
-      expect(response.body[0]).toHaveProperty("title", "Test Challenge");
-      expect(response.body[0].game.categories).toContain("Action");
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0]).toHaveProperty("title", "Test Challenge");
+      expect(response.body.data[0].game.categories).toContain("Action");
     });
 
     test("should return 404 if user has no favorites", async () => {
@@ -208,7 +208,7 @@ describe("User Controller", () => {
         .set("Cookie", accessToken);
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(2);
+      expect(response.body.data).toHaveLength(2);
     });
   });
 

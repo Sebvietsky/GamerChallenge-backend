@@ -145,3 +145,4 @@ testng-results.xml
 # 3. Test with `git status --ignored` to ensure proper coverage
 
 /generated/prisma
+todo.md
