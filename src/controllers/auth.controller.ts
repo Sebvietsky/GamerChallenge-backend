@@ -109,7 +109,7 @@ const controller = {
   async logoutUser(req: Request, res: Response): Promise<void> {
     await prisma.refreshToken.deleteMany({ where: { userId: req.user.id } });
     res.clearCookie("accessToken");
-    res.clearCookie("refreshToken", { path: "/api/auth/refresh" });
+    res.clearCookie("refreshToken");
     res.clearCookie("isAuthenticated");
     res.status(204).end();
   },
@@ -223,7 +223,7 @@ const controller = {
     ]);
 
     res.clearCookie("accessToken");
-    res.clearCookie("refreshToken", { path: "/api/auth/refresh" });
+    res.clearCookie("refreshToken");
     res.clearCookie("isAuthenticated");
 
     res.status(204).end();

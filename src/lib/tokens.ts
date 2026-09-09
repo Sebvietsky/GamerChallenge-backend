@@ -43,11 +43,15 @@ export function setAccessTokenCookie(res: Response, accessToken: Token) {
   });
 }
 
+// path "/" (défaut) et non "/api/auth/refresh" : le serveur Next (middleware)
+// doit recevoir ce cookie sur les navigations vers les pages protégées pour
+// pouvoir rafraîchir la session avant le rendu des Server Components.
+// Un path restreint n'est de toute façon pas une frontière de sécurité :
+// la protection repose sur httpOnly + sameSite.
 export function setRefreshTokenCookie(res: Response, refreshToken: Token) {
   res.cookie("refreshToken", refreshToken.token, {
     ...baseCookieOptions,
     maxAge: refreshToken.expiresInMS,
-    path: "/api/auth/refresh",
   });
 }
 
