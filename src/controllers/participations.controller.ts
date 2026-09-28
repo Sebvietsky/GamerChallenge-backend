@@ -17,24 +17,17 @@ const controller = {
 
     const { skip, take } = getPaginationParams(page, limit);
 
-    const sinceDate = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
-
     const [trendingParticipations, total] = await Promise.all([
       prisma.participation.findMany({
-        where: {
-          createdAt: { gte: sinceDate },
-        },
         select: { ...participationSelectParams, challenge: { select: challengeSelectParams } },
-        distinct: "id",
+        // Les plus votees d'abord ; l'id departage en dernier pour que la
+        // pagination reste stable entre deux pages.
+        orderBy: [{ votes: { _count: "desc" } }, { createdAt: "desc" }, { id: "desc" }],
         skip,
         take,
       }),
 
-      prisma.participation.count({
-        where: {
-          createdAt: { gte: sinceDate },
-        },
-      }),
+      prisma.participation.count(),
     ]);
 
     if (trendingParticipations.length === 0)

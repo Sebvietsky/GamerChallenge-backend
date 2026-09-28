@@ -130,6 +130,129 @@ describe("Participations Controller", () => {
     vi.clearAllMocks();
   });
 
+  describe("GET /api/participations/trends", () => {
+    test("should return 200 with a paginated list including old participations", async () => {
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+      await prisma.participation.createMany({
+        data: [
+          {
+            title: "Old Participation",
+            slug: "old-participation-long-slug-to-pass-validation-aaaaaaaaa",
+            video: "https://youtube.com/watch?v=old",
+            userId,
+            challengeId,
+            createdAt: thirtyDaysAgo,
+          },
+          {
+            title: "Recent Participation",
+            slug: "recent-participation-long-slug-to-pass-validation-aaaaaa",
+            video: "https://youtube.com/watch?v=recent",
+            userId: otherUserId,
+            challengeId,
+          },
+        ],
+      });
+
+      const response = await request(app).get("/api/participations/trends");
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty("page");
+      expect(response.body).toHaveProperty("limit");
+      expect(response.body).toHaveProperty("totalPages");
+      expect(response.body.total).toBe(2);
+      expect(response.body.data).toHaveLength(2);
+      expect(response.body.data.map((p: { title: string }) => p.title)).toEqual(
+        expect.arrayContaining(["Old Participation", "Recent Participation"])
+      );
+      expect(response.body.data[0]).toHaveProperty("challenge");
+    });
+
+    test("should count every participation in total, not only the current page", async () => {
+      await prisma.participation.createMany({
+        data: [
+          {
+            title: "First",
+            slug: "first-participation-long-slug-to-pass-validation-aaaaaaa",
+            video: "https://youtube.com/watch?v=first",
+            userId,
+            challengeId,
+          },
+          {
+            title: "Second",
+            slug: "second-participation-long-slug-to-pass-validation-aaaaaa",
+            video: "https://youtube.com/watch?v=second",
+            userId: otherUserId,
+            challengeId,
+          },
+        ],
+      });
+
+      const response = await request(app).get("/api/participations/trends?page=1&limit=1");
+
+      expect(response.status).toBe(200);
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.total).toBe(2);
+      expect(response.body.totalPages).toBe(2);
+    });
+
+    test("should sort by vote count, then most recent first", async () => {
+      const admin = await prisma.user.findUniqueOrThrow({ where: { email: "admin@example.com" } });
+      const day = 24 * 60 * 60 * 1000;
+
+      const mostVoted = await prisma.participation.create({
+        data: {
+          title: "Most Voted Old",
+          slug: "most-voted-old-long-slug-to-pass-validation-aaaaaaaaaaaa",
+          video: "https://youtube.com/watch?v=voted",
+          userId,
+          challengeId,
+          createdAt: new Date(Date.now() - 30 * day),
+        },
+      });
+      await prisma.participation.create({
+        data: {
+          title: "No Vote Recent",
+          slug: "no-vote-recent-long-slug-to-pass-validation-aaaaaaaaaaaa",
+          video: "https://youtube.com/watch?v=recent",
+          userId: otherUserId,
+          challengeId,
+        },
+      });
+      await prisma.participation.create({
+        data: {
+          title: "No Vote Older",
+          slug: "no-vote-older-long-slug-to-pass-validation-aaaaaaaaaaaaa",
+          video: "https://youtube.com/watch?v=older",
+          userId: admin.id,
+          challengeId,
+          createdAt: new Date(Date.now() - 10 * day),
+        },
+      });
+      await prisma.participationVote.createMany({
+        data: [
+          { userId, participationId: mostVoted.id },
+          { userId: otherUserId, participationId: mostVoted.id },
+        ],
+      });
+
+      const response = await request(app).get("/api/participations/trends");
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.map((p: { title: string }) => p.title)).toEqual([
+        "Most Voted Old",
+        "No Vote Recent",
+        "No Vote Older",
+      ]);
+    });
+
+    test("should return 404 when there is no participation", async () => {
+      const response = await request(app).get("/api/participations/trends");
+
+      expect(response.status).toBe(404);
+    });
+  });
+
   describe("GET /api/participations/:slug", () => {
     test("should return 200 and the participation if it exists", async () => {
       await prisma.participation.create({
